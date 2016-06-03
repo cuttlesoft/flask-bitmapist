@@ -4,7 +4,7 @@
     ~~~~~~~~~~~~~~~~~~~~~
     setup.py for Flask-Bitmapist
 
-    :copyright: (c) 2016 by Frank Valcarcel.
+    :copyright: (c) 2016 by Cuttlesoft, LLC.
     :license: MIT, see LICENSE for more details.
 """
 
@@ -17,8 +17,8 @@ setup(
     url='http://github.com/cuttlesoft/flask-bitmapist',
     download_url='https://github.com/cuttlesoft/flask-bitmapist/tarball/0.1.0',
     license='MIT',
-    author='Frank Valcarcel',
-    author_email='frank@cuttlesoft.com',
+    author='Cuttlesoft, LLC',
+    author_email='engineering@cuttlesoft.com',
     description='Flask extension that creates a simple interface to Bitmapist analytics library',
     long_description=open('README.md').read() + '\n\n' + open('HISTORY.rst').read(),
     keywords=['Flask', 'Bitmapist'],

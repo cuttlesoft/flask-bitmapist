@@ -3,7 +3,7 @@
     flask_bitmapist
     ~~~~~~~~~~~~~~
 
-    :copyright: (c) 2016 by Frank Valcarcel.
+    :copyright: (c) 2016 by Cuttlesoft, LLC.
     :license: MIT, see LICENSE for more details
 """
 

@@ -4,7 +4,7 @@
     ~~~~~~~~~~~~~~~~~~~~~
     This module provides the views for Flask-Bitmapist's web interface.
 
-    :copyright: (c) 2016 by Frank Valcarcel.
+    :copyright: (c) 2016 by Cuttlesoft, LLC.
     :license: MIT, see LICENSE for more details.
 """
 
