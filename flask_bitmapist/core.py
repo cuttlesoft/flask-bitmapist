@@ -22,6 +22,9 @@ class FlaskBitmapist(object):
     app = None
     redis_url = None
 
+    SYSTEMS = bitmapist.SYSTEMS
+    TRACK_HOURLY = bitmapist.TRACK_HOURLY
+
     def __init__(self, app=None, config=None, **opts):
         if not (config is None or isinstance(config, dict)):
             raise ValueError("config must be an instance of dict or None")
