@@ -5,7 +5,7 @@ from flask_bitmapist import FlaskBitmapist
 app = MagicMock()
 app.config = {}
 app.config['TESTING'] = True
-app.config['BITMAPIST_REDIS_URL'] = 'redis://'
+app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6379'
 
 
 class FlaskBitmapistTest(unittest.TestCase):

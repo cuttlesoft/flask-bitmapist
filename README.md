@@ -1,6 +1,8 @@
 Flask-Bitmapist
 ==============
 
+[![Build Status](https://travis-ci.org/cuttlesoft/flask-bitmapist.svg?branch=master)](https://travis-ci.org/cuttlesoft/flask-bitmapist)
+
 Flask extension that creates a simple interface to the Bitmapist analytics library.
 
 
