@@ -14,13 +14,16 @@ cache:
   - pip
 
 install:
-  - pip install -e .
+  - pip install -r requirements-dev.txt -e .
   - pip install coverage coveralls Mako
 
 services:
   - redis-server
 
-script: python setup.py test
+script: py.test --cov flask_bitmapist --cov-report term-missing --pep8 --flakes
+
+after_script:
+  - coveralls
 
 branches:
   only:

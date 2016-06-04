@@ -10,7 +10,7 @@
 
 import os
 
-from bitmapist import cohort, get_event_names
+from bitmapist import get_event_names
 
 from flask import Blueprint, render_template
 
@@ -18,9 +18,9 @@ from flask import Blueprint, render_template
 root = os.path.abspath(os.path.dirname(__file__))
 
 bitmapist_bp = Blueprint('bitmapist', 'flask_bitmapist',
-    template_folder=os.path.join(root, 'templates'),
-    static_folder=os.path.join(root, 'static'),
-    url_prefix='/bitmapist')
+                         template_folder=os.path.join(root, 'templates'),
+                         static_folder=os.path.join(root, 'static'),
+                         url_prefix='/bitmapist')
 
 
 @bitmapist_bp.context_processor

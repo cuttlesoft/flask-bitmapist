@@ -8,7 +8,37 @@
     :license: MIT, see LICENSE for more details.
 """
 
-from setuptools import setup
+import multiprocessing  # pragma: no flakes
+import sys
+
+from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
+
+
+def get_requirements(suffix=''):
+    with open('requirements%s.txt' % suffix) as f:
+        rv = f.read().splitlines()
+    return rv
+
+
+class PyTest(TestCommand):
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = [
+            '-xrs',
+            '--cov', 'flask_bitmapist',
+            '--cov-report', 'term-missing',
+            '--pep8',
+            '--flakes',
+            '--cache-clear'
+        ]
+        self.test_suite = True
+
+    def run_tests(self):
+        import pytest
+        errno = pytest.main(self.test_args)
+        sys.exit(errno)
 
 
 setup(
@@ -21,6 +51,7 @@ setup(
     author_email='engineering@cuttlesoft.com',
     description='Flask extension that creates a simple interface to Bitmapist analytics library',
     long_description=open('README.md').read() + '\n\n' + open('HISTORY.rst').read(),
+    packages=find_packages(),
     keywords=['Flask', 'Bitmapist'],
     py_modules=['flask_bitmapist'],
     zip_safe=False,
@@ -29,7 +60,8 @@ setup(
         'Flask>=0.9',
         'bitmapist>=3.97'
     ],
-    test_suite="tests",
+    tests_require=get_requirements('-dev'),
+    cmdclass={'test': PyTest},
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Web Environment',

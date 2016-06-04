@@ -8,7 +8,7 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import bitmapist
+import bitmapist as _bitmapist
 
 from .utils import _get_redis_connection
 from .views import bitmapist_bp
@@ -21,9 +21,8 @@ class FlaskBitmapist(object):
 
     app = None
     redis_url = None
-
-    SYSTEMS = bitmapist.SYSTEMS
-    TRACK_HOURLY = bitmapist.TRACK_HOURLY
+    SYSTEMS = _bitmapist.SYSTEMS
+    TRACK_HOURLY = _bitmapist.TRACK_HOURLY
 
     def __init__(self, app=None, config=None, **opts):
         if not (config is None or isinstance(config, dict)):
@@ -39,17 +38,17 @@ class FlaskBitmapist(object):
         self.app = app
         self.redis_url = app.config.get('BITMAPIST_REDIS_URL', 'redis://localhost:6379')
 
-        if self.redis_url not in bitmapist.SYSTEMS.values():
+        if self.redis_url not in _bitmapist.SYSTEMS.values():
             host, port = _get_redis_connection(self.redis_url)
-            bitmapist.setup_redis(
+            _bitmapist.setup_redis(
                 app.config.get('BITMAPIST_REDIS_SYSTEM', 'default'),
                 host,
                 port)
 
-        bitmapist.TRACK_HOURLY = app.config.get('BITMAPIST_TRACK_HOURLY', False)
+        _bitmapist.TRACK_HOURLY = app.config.get('BITMAPIST_TRACK_HOURLY', False)
 
         if not hasattr(app, 'extensions'):
             app.extensions = {}
-        app.extensions['bitmapist'] = self
 
+        app.extensions['bitmapist'] = self
         app.register_blueprint(bitmapist_bp)
