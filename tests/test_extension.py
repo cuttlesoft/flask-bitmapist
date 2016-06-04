@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from flask import request
-from flask_bitmapist import MonthEvents, WeekEvents
+from flask_bitmapist import mark, MonthEvents, WeekEvents, DayEvents
 
 
 now = datetime.utcnow()
@@ -32,6 +32,12 @@ def test_events(app, bitmap, client):
 
 
 def test_mark_decorator(app, client):
+
+    @app.route('/')
+    @mark('test', 1)
+    def index():
+        return ''
+
     client.get('/', follow_redirects=True)
 
     # month events
@@ -43,8 +49,8 @@ def test_mark_decorator(app, client):
     assert 2 not in WeekEvents('test', now.year, now.isocalendar()[1])
 
     # day events
-    # assert 1 in DayEvents('test', now.year, now.month, now.day)
-    # assert 2 not in DayEvents('test', now.year, now.month, now.day)
+    assert 1 in DayEvents('test', now.year, now.month, now.day)
+    assert 2 not in DayEvents('test', now.year, now.month, now.day)
 
     # hour events
     # assert 123 in HourEvents('test', now.year, now.month, now.day, now.hour)
