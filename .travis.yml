@@ -22,7 +22,7 @@ services:
 
 script: py.test --cov flask_bitmapist --cov-report term-missing --pep8 --flakes
 
-after_script:
+after_success:
   - coveralls
 
 branches:

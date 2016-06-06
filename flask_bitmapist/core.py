@@ -2,7 +2,7 @@
 """
     flask_bitmapist.core
     ~~~~~~~~~~~~~~~~~~~~
-    Implements the core functionality for bitmapist
+    Implements the core integration from flask to bitmapist
 
     :copyright: (c) 2016 by Cuttlesoft, LLC.
     :license: MIT, see LICENSE for more details.

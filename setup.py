@@ -8,7 +8,6 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import multiprocessing  # pragma: no flakes
 import sys
 
 from setuptools import setup, find_packages
