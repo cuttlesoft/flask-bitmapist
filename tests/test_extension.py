@@ -10,6 +10,13 @@ from flask_bitmapist import (mark, MonthEvents, WeekEvents, DayEvents, HourEvent
 now = datetime.utcnow()
 
 
+def test_before_insert(app, bitmap, sqlalchemy_datastore):
+    role = sqlalchemy_datastore.create_role(name='admin')
+    user = sqlalchemy_datastore.create_user(email='email@test.org', username='guy',
+                                            password='password', roles=[role])
+    assert user.has_role('admin') is True
+
+
 def test_redis_url_config(app, bitmap):
     assert bitmap.redis_url == app.config['BITMAPIST_REDIS_URL']
 
