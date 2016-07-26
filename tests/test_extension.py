@@ -6,8 +6,28 @@ from flask import request
 from flask_bitmapist import (mark, MonthEvents, WeekEvents, DayEvents, HourEvents,
                              mark_event, unmark_event)
 
+from flask_login import UserMixin, current_user, login_user
+
 
 now = datetime.utcnow()
+
+
+class User(UserMixin):
+    id = None
+
+
+def test_user_login(app):
+    with app.test_request_context():
+        user = User()
+        user.id = 1
+
+        # login user
+        login_user(user)
+        assert current_user == user
+
+        # signal: user_is_logged_in -> mark_event('user_is_logged_in', user.id)
+        # user_logged_in instead of user_is_logged_in ?
+        assert 1 in MonthEvents('user_logged_in', now.year, now.month)
 
 
 def test_redis_url_config(app, bitmap):
