@@ -3,12 +3,14 @@
 from datetime import datetime
 
 from flask import request
+from flask_login import LoginManager, UserMixin, current_user, login_user
+
 from flask_bitmapist import (mark, MonthEvents, WeekEvents, DayEvents, HourEvents,
                              mark_event, unmark_event)
+from flask_bitmapist.extensions.flask_login import mark_login
 
-from flask_login import UserMixin, current_user, login_user
 
-
+mark_login  # import necessary for test_user_login, but unused fails pyflakes
 now = datetime.utcnow()
 
 
@@ -17,17 +19,31 @@ class User(UserMixin):
 
 
 def test_user_login(app):
-    with app.test_request_context():
-        user = User()
-        user.id = 1
+    # LoginManager could be set up in app fixture in conftest.py instead
+    login_manager = LoginManager()
+    login_manager.init_app(app)
 
-        # login user
+    # TODO: once event is marked, user id exists in MonthEvents and test will
+    #       continue to pass, regardless of continued success; set to current
+    #       microsecond to temporarily circumvent, but there should be a better
+    #       way to fix user_id assignment (or tear down redis or something)
+    user_id = datetime.now().microsecond
+    # user_id = 1
+    # print user_id
+
+    with app.test_request_context():
+        # set up and log in user
+        user = User()
+        user.id = user_id
         login_user(user)
+
+        # test that user was logged in
+        assert current_user.is_active
+        assert current_user.is_authenticated
         assert current_user == user
 
-        # signal: user_is_logged_in -> mark_event('user_is_logged_in', user.id)
-        # user_logged_in instead of user_is_logged_in ?
-        assert 1 in MonthEvents('user_logged_in', now.year, now.month)
+        # test that user id was marked with 'user_logged_in' event
+        assert user_id in MonthEvents('user_logged_in', now.year, now.month)
 
 
 def test_redis_url_config(app, bitmap):

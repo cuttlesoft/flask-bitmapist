@@ -3,7 +3,7 @@
 import pytest
 
 from flask import Flask
-from flask_login import LoginManager
+# from flask_login import LoginManager
 from flask_bitmapist import FlaskBitmapist
 
 
@@ -15,10 +15,8 @@ def app(request):
     app.config['TESTING'] = True
     app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6379'
     app.config['SECRET_KEY'] = 'verysecret'
-
-    login_manager = LoginManager()
-    login_manager.init_app(app)
-
+    # login_manager = LoginManager()
+    # login_manager.init_app(app)
     return app
 
 
