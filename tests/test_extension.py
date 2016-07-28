@@ -3,14 +3,17 @@
 from datetime import datetime
 
 from flask import request
-from flask_login import LoginManager, UserMixin, current_user, login_user
+from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 
 from flask_bitmapist import (mark, MonthEvents, WeekEvents, DayEvents, HourEvents,
                              mark_event, unmark_event)
-from flask_bitmapist.extensions.flask_login import mark_login
+from flask_bitmapist.extensions.flask_login import mark_login, mark_logout
 
 
-mark_login  # import necessary for test_user_login, but unused fails pyflakes
+# import necessary for test_user_login/logout, but unused fails pyflakes
+mark_login
+mark_logout
+
 now = datetime.utcnow()
 
 
@@ -44,6 +47,28 @@ def test_user_login(app):
 
         # test that user id was marked with 'user_logged_in' event
         assert user_id in MonthEvents('user_logged_in', now.year, now.month)
+
+
+def test_user_logout(app):
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    user_id = datetime.now().microsecond
+
+    with app.test_request_context():
+        # set up, log in, and log out user
+        user = User()
+        user.id = user_id
+        login_user(user)
+        logout_user()
+
+        # test that user was logged out
+        assert not current_user.is_active
+        assert not current_user.is_authenticated
+        assert not current_user == user
+
+        # test that user id was marked with 'user_logged_out' event
+        assert user_id in MonthEvents('user_logged_out', now.year, now.month)
 
 
 def test_redis_url_config(app, bitmap):

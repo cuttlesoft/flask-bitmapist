@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from flask.ext.login import user_logged_in
+from flask.ext.login import user_logged_in, user_logged_out
 
 from flask_bitmapist import mark_event
 
@@ -8,3 +8,8 @@ from flask_bitmapist import mark_event
 @user_logged_in.connect  # vs .connect_via(app)
 def mark_login(sender, user, **extra):
     mark_event('user_logged_in', user.id)
+
+
+@user_logged_out.connect
+def mark_logout(sender, user, **extra):
+    mark_event('user_logged_out', user.id)
