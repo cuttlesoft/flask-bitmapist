@@ -3,12 +3,72 @@
 from datetime import datetime
 
 from flask import request
+from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
+
 from flask_bitmapist import (mark, MonthEvents, WeekEvents, DayEvents, HourEvents,
                              mark_event, unmark_event)
+from flask_bitmapist.extensions.flask_login import mark_login, mark_logout
 
+
+# import necessary for test_user_login/logout, but unused fails pyflakes
+mark_login
+mark_logout
 
 now = datetime.utcnow()
 
+
+class User(UserMixin):
+    id = None
+
+
+def test_user_login(app):
+    # LoginManager could be set up in app fixture in conftest.py instead
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    # TODO: once event is marked, user id exists in MonthEvents and test will
+    #       continue to pass, regardless of continued success; set to current
+    #       microsecond to temporarily circumvent, but there should be a better
+    #       way to fix user_id assignment (or tear down redis or something)
+    user_id = datetime.now().microsecond
+    # user_id = 1
+    # print user_id
+
+    with app.test_request_context():
+        # set up and log in user
+        user = User()
+        user.id = user_id
+        login_user(user)
+
+        # test that user was logged in
+        assert current_user.is_active
+        assert current_user.is_authenticated
+        assert current_user == user
+
+        # test that user id was marked with 'user_logged_in' event
+        assert user_id in MonthEvents('user_logged_in', now.year, now.month)
+
+
+def test_user_logout(app):
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+
+    user_id = datetime.now().microsecond
+
+    with app.test_request_context():
+        # set up, log in, and log out user
+        user = User()
+        user.id = user_id
+        login_user(user)
+        logout_user()
+
+        # test that user was logged out
+        assert not current_user.is_active
+        assert not current_user.is_authenticated
+        assert not current_user == user
+
+        # test that user id was marked with 'user_logged_out' event
+        assert user_id in MonthEvents('user_logged_out', now.year, now.month)
 
 def test_before_insert(app, bitmap, sqlalchemy_datastore):
     role = sqlalchemy_datastore.create_role(name='admin')

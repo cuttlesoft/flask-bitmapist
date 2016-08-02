@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+import redis
 
 from flask import Flask
+# from flask_login import LoginManager
 from flask_bitmapist import FlaskBitmapist
 
 from datastore import SQLAlchemyUserDatastore
@@ -15,8 +17,11 @@ def app(request):
     app.debug = True
     app.config['SECRET_KEY'] = 'secret'
     app.config['TESTING'] = True
-    app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6379'
+    # app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6379'
+    app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6399'
     app.config['SECRET_KEY'] = 'verysecret'
+    # login_manager = LoginManager()
+    # login_manager.init_app(app)
     return app
 
 
@@ -99,3 +104,21 @@ def sqlalchemy_datastore(request, app, tmpdir):
     request.addfinalizer(lambda: os.remove(path))
 
     return SQLAlchemyUserDatastore(db, User, Role)
+
+
+# REDIS (a la Bitmapist)
+
+@pytest.fixture(scope='session', autouse=True)
+def setup_redis_for_bitmapist():
+    from bitmapist import SYSTEMS
+
+    SYSTEMS['default'] = redis.Redis(host='localhost', port=6399)
+    SYSTEMS['default_copy'] = redis.Redis(host='localhost', port=6399)
+
+
+@pytest.fixture(autouse=True)
+def clean_redis():
+    cli = redis.Redis(host='localhost', port=6399)
+    keys = cli.keys('trackist_*')
+    if len(keys) > 0:
+        cli.delete(*keys)
