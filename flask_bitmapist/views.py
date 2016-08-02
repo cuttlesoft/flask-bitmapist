@@ -10,7 +10,9 @@
 
 import os
 
-from bitmapist import get_event_names
+from datetime import datetime
+
+from bitmapist import get_event_names, DayEvents, WeekEvents, MonthEvents, YearEvents
 
 from flask import Blueprint, render_template
 
@@ -29,9 +31,20 @@ def inject_version():
     return dict(version=__version__)
 
 
+# @bitmapist_bp.route('/')
+# def index():
+#     return render_template('bitmapist/index.html', events=get_event_names())
+
+
 @bitmapist_bp.route('/')
 def index():
-    return render_template('bitmapist/index.html', events=get_event_names())
+    now = datetime.utcnow()
+
+    day_events = len(list(DayEvents('user_logged_in', now.year, now.month, now.day)))
+    week_events = len(list(WeekEvents('user_logged_in', now.year, now.isocalendar()[1])))
+    month_events = len(list(MonthEvents('user_logged_in', now.year, now.month)))
+    year_events = len(list(YearEvents('user_logged_in', now.year)))
+    return render_template('bitmapist/data.html', events=get_event_names(), day_events=day_events, week_events=week_events, month_events=month_events, year_events=year_events)
 
 
 @bitmapist_bp.route('/events')
