@@ -2,23 +2,23 @@
 
 import pytest
 import redis
+import os
 
 from flask import Flask
 # from flask_login import LoginManager
+
 from flask_bitmapist import FlaskBitmapist
-
-from datastore import SQLAlchemyUserDatastore
-# from mixins import Bitmapistable
+from flask_bitmapist.mixins import Bitmapistable
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def app(request):
     app = Flask(__name__)
     app.debug = True
-    app.config['SECRET_KEY'] = 'secret'
     app.config['TESTING'] = True
     # app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6379'
     app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6399'
+    app.config['SECRET_KEY'] = 'secret'
     app.config['SECRET_KEY'] = 'verysecret'
     # login_manager = LoginManager()
     # login_manager.init_app(app)
@@ -63,47 +63,36 @@ def request_context(request, app):
     return app.test_request_context()
 
 
-@pytest.fixture()
-def sqlalchemy_datastore(request, app, tmpdir):
-    import os, tempfile
+@pytest.fixture
+def sqlalchemy(app, request):
     from flask_sqlalchemy import SQLAlchemy
 
-    f, path = tempfile.mkstemp(prefix='flask-security-test-db', suffix='.db', dir=str(tmpdir))
+    TESTS_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+    TESTDB = 'test.sqlite'
+    TESTDB_PATH = os.path.join(os.path.join(TESTS_PATH, 'tests/db'), TESTDB)
+    TESTDB_URI = 'sqlite:///' + TESTDB_PATH
 
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + path
     db = SQLAlchemy(app)
+    app.config['SQLALCHEMY_DATABASE_URI'] = TESTDB_URI
+    # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    roles_users = db.Table(
-        'roles_users',
-        db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
-        db.Column('role_id', db.Integer(), db.ForeignKey('role.id')))
-
-    class Role(db.Model):
-        id = db.Column(db.Integer(), primary_key=True)
-        name = db.Column(db.String(80), unique=True)
-        description = db.Column(db.String(255))
-
-    class User(db.Model):
+    class User(db.Model, Bitmapistable):
         id = db.Column(db.Integer, primary_key=True)
-        email = db.Column(db.String(255), unique=True)
-        username = db.Column(db.String(255))
-        password = db.Column(db.String(255))
-        last_login_at = db.Column(db.DateTime())
-        current_login_at = db.Column(db.DateTime())
-        last_login_ip = db.Column(db.String(100))
-        current_login_ip = db.Column(db.String(100))
-        login_count = db.Column(db.Integer)
-        active = db.Column(db.Boolean())
-        confirmed_at = db.Column(db.DateTime())
-        roles = db.relationship('Role', secondary=roles_users,
-                                backref=db.backref('users', lazy='dynamic'))
+        name = db.Column(db.String(50))
 
-    with app.app_context():
+    def teardown():
+        db.drop_all()
+        os.unlink(TESTDB_PATH)
+
+    # if os.path.exists(TESTDB_PATH):
+    #     os.unlink(TESTDB_PATH)
+
+    with app.test_request_context():
         db.create_all()
 
-    request.addfinalizer(lambda: os.remove(path))
-
-    return SQLAlchemyUserDatastore(db, User, Role)
+    request.addfinalizer(teardown)
+    # TODO: do this right (how?)
+    return db, User
 
 
 # REDIS (a la Bitmapist)

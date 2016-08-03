@@ -8,44 +8,28 @@
     :license: MIT, see LICENSE for more details.
 """
 
-# JUST FOR NOW
-# try:
-#     import SQLAlchemy
-# except ImportError:
-#     print('uh oh')
-# from sqlalchemy.ext.declarative import declared_attr
-from flask.ext.sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 
 from bitmapist import mark_event
 
-db = SQLAlchemy()
 
-
-class Bitmapistable(db.Model):
+class Bitmapistable(object):
     """A mixin class to make a model Bitmapist-ready."""
 
-    __abstract__ = True
+    @staticmethod
+    def bitmapist_after_insert(mapper, connection, target):
+        mark_event('%s_inserted' % target.__class__.__name__.lower(), target.id)
 
-    def bitmapist_before_insert(self, *args, **kwargs):
-        # mark_event(event_name, uuid, system, now, track_hourly, use_pipeline)
-        mark_event('insert %s' % self.__name__, self.primary_key)
+    @staticmethod
+    def bitmapist_before_update(mapper, connection, target):
+        mark_event('%s_updated' % target.__class__.__name__.lower(), target.id)
 
-    def bitmapist_before_update(self, *args, **kwargs):
-        # mark_event(event_name, uuid, system, now, track_hourly, use_pipeline)
-        mark_event('update %s' % self.__name__, self.primary_key)
+    @staticmethod
+    def bitmapist_before_delete(mapper, connection, target):
+        mark_event('%s_deleted' % target.__class__.__name__.lower(), target.id)
 
-    def bitmapist_before_delete(self, *args, **kwargs):
-        # mark_event(event_name, uuid, system, now, track_hourly, use_pipeline)
-        mark_event('delete %s' % self.__name__, self.primary_key)
-
+    @classmethod
     def __declare_last__(self):
-        event.listen(self, 'before_insert', self.bitmapist_before_insert)
+        event.listen(self, 'after_insert', self.bitmapist_after_insert)
         event.listen(self, 'before_update', self.bitmapist_before_update)
         event.listen(self, 'before_delete', self.bitmapist_before_delete)
-
-
-# @event.listens_for(Bitmappable, 'before_insert', propagate=True)
-# def bitmapist_before_insert(self, *args, **kwargs):
-#     # mark_event(event_name, uuid, system, now, track_hourly, use_pipeline)
-#     mark_event('insert %s' % self.__class__.__name__, self.primary_key)

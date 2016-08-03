@@ -70,11 +70,67 @@ def test_user_logout(app):
         # test that user id was marked with 'user_logged_out' event
         assert user_id in MonthEvents('user_logged_out', now.year, now.month)
 
-def test_before_insert(app, bitmap, sqlalchemy_datastore):
-    role = sqlalchemy_datastore.create_role(name='admin')
-    user = sqlalchemy_datastore.create_user(email='email@test.org', username='guy',
-                                            password='password', roles=[role])
-    assert user.has_role('admin') is True
+
+def test_after_insert(sqlalchemy):
+    # TODO: do this right (how?)
+    db, User = sqlalchemy
+
+    with db.app.test_request_context():
+        # set up and save user
+        user = User(name='Test User')
+        db.session.add(user)
+        db.session.commit()
+
+        # test that user was saved
+        assert user.id is not None
+
+        # test that user id was marked with 'user_inserted' event
+        assert user.id in MonthEvents('user_inserted', now.year, now.month)
+
+
+def test_before_update(sqlalchemy):
+    # TODO: do this right (how?)
+    db, User = sqlalchemy
+
+    with db.app.test_request_context():
+        # set up and save user
+        user = User(name='Test User')
+        db.session.add(user)
+        db.session.commit()
+
+        # update user, and test that user is updated
+        user.name = 'New Name'
+        assert db.session.is_modified(user)
+
+        db.session.add(user)
+        db.session.commit()
+        assert not db.session.is_modified(user)
+
+        # test that user id was marked with 'user_updated' event
+        assert user.id in MonthEvents('user_updated', now.year, now.month)
+
+
+def test_before_delete(sqlalchemy):
+    # TODO: do this right (how?)
+    db, User = sqlalchemy
+
+    with db.app.test_request_context():
+        # set up and save user
+        user = User(name='Test User')
+        db.session.add(user)
+        db.session.commit()
+
+        # grab user id before we delete
+        user_id = user.id
+
+        # delete user, and test that user is deleted
+        db.session.delete(user)
+        db.session.commit()
+        user_in_db = db.session.query(User).filter(User.id == user_id).first()
+        assert not user_in_db
+
+        # test that user id was marked with 'user_deleted' event
+        assert user_id in MonthEvents('user_deleted', now.year, now.month)
 
 
 def test_redis_url_config(app, bitmap):
