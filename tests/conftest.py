@@ -2,20 +2,23 @@
 
 import pytest
 import redis
+import os
 
 from flask import Flask
 # from flask_login import LoginManager
+
 from flask_bitmapist import FlaskBitmapist
+from flask_bitmapist.mixins import Bitmapistable
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def app(request):
     app = Flask(__name__)
     app.debug = True
-    app.config['SECRET_KEY'] = 'secret'
     app.config['TESTING'] = True
     # app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6379'
     app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6399'
+    app.config['SECRET_KEY'] = 'secret'
     app.config['SECRET_KEY'] = 'verysecret'
     # login_manager = LoginManager()
     # login_manager.init_app(app)
@@ -60,8 +63,39 @@ def request_context(request, app):
     return app.test_request_context()
 
 
-# REDIS (a la Bitmapist)
+@pytest.fixture
+def sqlalchemy(app, request):
+    from flask_sqlalchemy import SQLAlchemy
 
+    TESTS_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+    TESTDB = 'test.sqlite'
+    TESTDB_PATH = os.path.join(os.path.join(TESTS_PATH, 'tests/db'), TESTDB)
+    TESTDB_URI = 'sqlite:///' + TESTDB_PATH
+
+    db = SQLAlchemy(app)
+    app.config['SQLALCHEMY_DATABASE_URI'] = TESTDB_URI
+    # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    class User(db.Model, Bitmapistable):
+        id = db.Column(db.Integer, primary_key=True)
+        name = db.Column(db.String(50))
+
+    def teardown():
+        db.drop_all()
+        os.unlink(TESTDB_PATH)
+
+    # if os.path.exists(TESTDB_PATH):
+    #     os.unlink(TESTDB_PATH)
+
+    with app.test_request_context():
+        db.create_all()
+
+    request.addfinalizer(teardown)
+    # TODO: do this right (how?)
+    return db, User
+
+
+# REDIS (a la Bitmapist)
 
 @pytest.fixture(scope='session', autouse=True)
 def setup_redis_for_bitmapist():
