@@ -1,0 +1,136 @@
+{% extends "bitmapist/base.html" %}
+
+{% block content %}
+<ul id="conditions" class="list-unstyled" style="margin-top:80px;">
+    <li class="condition">
+      <div class="row">
+        <div class="col-md-1">
+          <label class="subtractions" style="margin-top: 0.5em;">Conditions</label>
+          <select name="operation" class="form-control additions">
+            <option value="and">AND</option>
+            <option value="or">OR</option>
+            <!-- <option value="nor">NOR</option> -->
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <select name="event-name" class="form-control">
+            <option></option>
+            {% for event_name in event_names %}
+            <option value="{{ event_name }}">{{ event_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <select name="interval" class="form-control">
+            <option></option>
+            {% for interval in intervals %}
+            <option value="{{ interval }}">Past {{ interval }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-1">
+          <button class="remove additions btn btn-xs btn-warning"><span class="glyphicon glyphicon-minus"><span class="sr-only">remove condition</span></span></button>
+        </div>
+      </div>
+    </li>
+
+    <br />
+  </ul>
+
+  <button id="add" class="btn btn-gray"><span class="glyphicon glyphicon-plus"><span class="sr-only">Add</span></span></button>
+
+  <button id="go" class="btn btn-success"><span class="glyphicon glyphicon-ok"><span class="sr-only">Go</span></span></button>
+
+  <div id="cohort" class="well"> (Add some conditions to get started...) </div>
+
+  <hr />
+
+  {% for event_name in event_names %}
+    <div id="{{ event_name }}" class="event-name">
+      <h1><small>{{ event_name }}</small></h1>
+      <span class="event-time day">Past Day: {{ events[event_name][3] }}</span>
+      <span class="event-time week">Past Week: {{ events[event_name][2] }}</span>
+      <span class="event-time month">Past Month: {{ events[event_name][1] }}</span>
+      <span class="event-time year">Past Year: {{ events[event_name][0] }}</span>
+    </div>
+  {% endfor %}
+
+
+{% endblock %}
+
+{% block js %}
+<script>
+
+  $('.condition:first-of-type .additions').hide();
+
+  $('#add').on('click', function() {
+    $('.condition:last-of-type').clone().appendTo('#conditions');
+
+    // For first new addition, handle unique show/hide from first condition
+    if ($('.condition').length == 2) {
+      $('.condition:last-of-type .additions').show();
+      $('.condition:last-of-type .subtractions').hide();
+    }
+  });
+
+  $('#conditions').on('click', '.remove', function() {
+    $(this).closest('.condition').remove();
+  });
+
+  $('#go').on('click', function() {
+
+    console.log('hashtag go');
+    // format the data
+    // submit the data
+    // AJAX + response
+    // lines lining up
+    // draw chart etc.
+
+    //////////////////
+
+    // format the data
+    var cohort = {};
+    var condition = $('.condition:first-of-type');
+    var ops = $('.condition:not(:first-of-type)');
+
+    var cohort = {
+      'event': {
+        'name': condition.find('select[name=event-name]').val(),
+        'range': condition.find('select[name=interval]').val()
+      }
+    };
+
+    if (ops.length) {
+      cohort['ops'] = [];
+      ops.each(function(index) {
+        var opEvent = {
+          'name': $(this).find('select[name=event-name]').val(),
+          'range': $(this).find('select[name=interval]').val(),
+          'operation': $(this).find('select[name=operation]').val()
+        };
+        cohort['ops'].push(opEvent);
+      });
+    }
+
+    console.log(cohort);
+
+    // submit the data
+
+    $.ajax({
+      url: "{{ url_for('.cohort') }}",
+      method: 'POST', // >= v1.9.0+
+      // type: 'POST', // < v1.9.0
+      data: JSON.stringify(cohort),
+      contentType: 'application/json'
+    }).done(function(data) {
+      console.log(data);
+    });
+
+
+  });
+
+</script>
+{% endblock %}
