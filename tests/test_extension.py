@@ -17,11 +17,13 @@ mark_logout
 now = datetime.utcnow()
 
 
+# FLASK LOGIN
+
 class User(UserMixin):
     id = None
 
 
-def test_user_login(app):
+def test_flask_login_user_login(app):
     # LoginManager could be set up in app fixture in conftest.py instead
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -49,7 +51,7 @@ def test_user_login(app):
         assert user_id in MonthEvents('user_logged_in', now.year, now.month)
 
 
-def test_user_logout(app):
+def test_flask_login_user_logout(app):
     login_manager = LoginManager()
     login_manager.init_app(app)
 
@@ -71,8 +73,14 @@ def test_user_logout(app):
         assert user_id in MonthEvents('user_logged_out', now.year, now.month)
 
 
-def test_after_insert(sqlalchemy):
-    # TODO: do this right (how?)
+# SQLALCHEMY
+
+# TODO: Instead of sqlalchemy fixture (return: db, User),
+#       each test could use sqlalchemy fixture (return:
+#       db) and sqlalchemy_user fixture (return: User);
+#       tests should use whichever is better practice.
+
+def test_sqlalchemy_after_insert(sqlalchemy):
     db, User = sqlalchemy
 
     with db.app.test_request_context():
@@ -88,8 +96,7 @@ def test_after_insert(sqlalchemy):
         assert user.id in MonthEvents('user_inserted', now.year, now.month)
 
 
-def test_before_update(sqlalchemy):
-    # TODO: do this right (how?)
+def test_sqlalchemy_before_update(sqlalchemy):
     db, User = sqlalchemy
 
     with db.app.test_request_context():
@@ -110,8 +117,7 @@ def test_before_update(sqlalchemy):
         assert user.id in MonthEvents('user_updated', now.year, now.month)
 
 
-def test_before_delete(sqlalchemy):
-    # TODO: do this right (how?)
+def test_sqlalchemy_before_delete(sqlalchemy):
     db, User = sqlalchemy
 
     with db.app.test_request_context():
@@ -132,6 +138,8 @@ def test_before_delete(sqlalchemy):
         # test that user id was marked with 'user_deleted' event
         assert user_id in MonthEvents('user_deleted', now.year, now.month)
 
+
+# GENERAL (redis, decorator, marking events, etc.)
 
 def test_redis_url_config(app, bitmap):
     assert bitmap.redis_url == app.config['BITMAPIST_REDIS_URL']

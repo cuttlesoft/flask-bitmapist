@@ -63,39 +63,7 @@ def request_context(request, app):
     return app.test_request_context()
 
 
-@pytest.fixture
-def sqlalchemy(app, request):
-    from flask_sqlalchemy import SQLAlchemy
-
-    TESTS_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-    TESTDB = 'test.sqlite'
-    TESTDB_PATH = os.path.join(os.path.join(TESTS_PATH, 'tests/db'), TESTDB)
-    TESTDB_URI = 'sqlite:///' + TESTDB_PATH
-
-    db = SQLAlchemy(app)
-    app.config['SQLALCHEMY_DATABASE_URI'] = TESTDB_URI
-    # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-    class User(db.Model, Bitmapistable):
-        id = db.Column(db.Integer, primary_key=True)
-        name = db.Column(db.String(50))
-
-    def teardown():
-        db.drop_all()
-        os.unlink(TESTDB_PATH)
-
-    # if os.path.exists(TESTDB_PATH):
-    #     os.unlink(TESTDB_PATH)
-
-    with app.test_request_context():
-        db.create_all()
-
-    request.addfinalizer(teardown)
-    # TODO: do this right (how?)
-    return db, User
-
-
-# REDIS (a la Bitmapist)
+# REDIS
 
 @pytest.fixture(scope='session', autouse=True)
 def setup_redis_for_bitmapist():
@@ -111,3 +79,51 @@ def clean_redis():
     keys = cli.keys('trackist_*')
     if len(keys) > 0:
         cli.delete(*keys)
+
+
+# SQLALCHEMY
+
+@pytest.fixture
+def sqlalchemy_db(app):
+    from flask_sqlalchemy import SQLAlchemy
+
+    db = SQLAlchemy(app)
+    return db
+
+
+@pytest.fixture
+def sqlalchemy_user(sqlalchemy_db):
+    db = sqlalchemy_db
+
+    class User(db.Model, Bitmapistable):
+        id = db.Column(db.Integer, primary_key=True)
+        name = db.Column(db.String(50))
+
+    return User
+
+
+@pytest.fixture
+def sqlalchemy(app, request, sqlalchemy_db, sqlalchemy_user):
+    db = sqlalchemy_db
+
+    TESTS_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+    TESTDB = 'test.sqlite'
+    TESTDB_PATH = os.path.join(os.path.join(TESTS_PATH, 'tests/db'), TESTDB)
+    TESTDB_URI = 'sqlite:///' + TESTDB_PATH
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = TESTDB_URI
+    # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    def teardown():
+        db.drop_all()
+        os.unlink(TESTDB_PATH)
+
+    # if os.path.exists(TESTDB_PATH):
+    #     os.unlink(TESTDB_PATH)
+
+    with app.test_request_context():
+        db.create_all()
+
+    request.addfinalizer(teardown)
+    # TODO: may return just db with tests using sqlalchemy_user fixture directly
+    return db, sqlalchemy_user
