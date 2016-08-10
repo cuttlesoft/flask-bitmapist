@@ -1,0 +1,81 @@
+<table class="cohort heatmap" cellpadding="0" cellspacing="0">
+    <tr>
+        <th width="200"></th>
+        {% for i in range(0, num_of_rows + 1) %}
+        <th class="entry">{{ i }}</th>
+        {% endfor %}
+    </tr>
+
+    {% for row_data in dates_data %}
+        <tr>
+            <td>
+                <div class="date">
+                    {% if time_group == 'months' %}
+                        {{ row_data[0].strftime('%d %b') }}
+                    {% elif time_group == 'weeks' %}
+                        {{ row_data[0].strftime('Week %U, %d %b') }}
+                    {% elif time_group == 'years' %}
+                        {{ row_data[0].strftime('%Y') }}
+                    {% else %}
+                        {{ row_data[0].strftime('%d %b, %Y') }}
+                    {% endif %}
+                </div>
+
+                <!-- ## Total count -->
+                <div class="total_count">{{ row_data[1] }}</div>
+            </td>
+
+            {% for i in range(2, num_of_rows + 3) %}
+                {% set percent = row_data[i] %}
+
+                {% if percent != '' %}
+                    {% if as_percent %}
+                        <td style="background-color: hsla(189, 80%, 48%, {{ (percent/100)|float|round(1) }}); color: hsla(0, 0%, 0%, {{ ((percent/100)|float + 0.25)|round(1) }});">
+                            {{ percent|round(2) }}%
+                        </td>
+                    {% else %}
+                        <td>
+                            {{ percent|int }}
+                        </td>
+                    {% endif %}
+                {% else %}
+                    <td></td>
+                {% endif %}
+
+            {% endfor %}
+        </tr>
+    {% endfor %}
+
+    <!-- <tr>
+        <td class="avg_row"></td>
+        {% for i in range(2, num_of_rows + 3) %}
+            {% set counts = 0 %}
+            {% set total = 0.0 %}
+
+            {% for row_data in dates_data %}
+                {% set percent = row_data[i] %}
+
+                {% if percent %}
+                    {% set counts = counts + 1 %}
+                    {% set total = total + percent %}
+                {% endif %}
+
+                {% if counts > 0 %}
+                  {% set avg = total / counts %}
+                {% else %}
+                  {% set avg = 0 %}
+                {% endif %}
+
+
+                <td class="avg_row">
+                    {% if as_percent %}
+                        {{ avg|round(2) }}%
+                    {% else %}
+                        {{ avg|int }}
+                    {% endif %}
+                </td>
+            {% endfor %}
+
+        {% endfor %}
+    </tr> -->
+</table>

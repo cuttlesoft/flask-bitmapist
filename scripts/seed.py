@@ -47,6 +47,8 @@ for _ in range(10000):
     rand_date = random_date(now, years_ago, random.random())
     user_id = randint(0, 99)
 
-    events = ['user_logged_in', 'user_logged_out', 'note_insert']
+    events = ['user_logged_in', 'user_logged_out',
+              'user_inserted', 'user_updated', 'user_deleted',
+              'note_inserted']
 
     mark_event(choice(events), user_id, now=rand_date)

@@ -5,6 +5,9 @@
   <title>Flask-Bitmapist</title>
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
   <link rel="stylesheet" href="{{ url_for('.static', filename='css/dashboard.css') }}">
+
+  {% block style %}
+  {% endblock %}
 </head>
 <body>
 
@@ -31,7 +34,6 @@
     </div>
   </nav>
 
-
   <div class="container">
     {% block content %}
     {% endblock %}
@@ -39,6 +41,7 @@
       <p>Powered by <a href="https://github.com/cuttlesoft/flask-bitmapist">Flask-Bitmapist</a> v{{ version }}</p>
     </div>
   </div>
+
   <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script> -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
   <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
