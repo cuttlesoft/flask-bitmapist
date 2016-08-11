@@ -14,197 +14,128 @@ select.op {
     margin-top: 0.5em;
 }
 
-/* Cohort Heatmap Table*/
+/* Cohort Heatmap Table */
 
-table.cohort.heatmap {
-    width: 1250px !important;
+table.cohort-heatmap {
+    width: 100%;
   	font-family: sans-serif;
+    /*border-color: #AAA;*/
 }
 
-table.cohort.heatmap .entry {
+/*table.cohort-heatmap .entry {
     width: 6%;
-    /*width: 75px;*/
-}
+}*/
 
-table.cohort.heatmap td, table.cohort.heatmap th {
-    padding: 5px 0;
+table.cohort-heatmap th,
+table.cohort-heatmap td {
     text-align: center;
-    border-right: 1px solid #aaa;
 }
 
-table.cohort.heatmap td {
-    border-bottom: 1px solid #aaa;
+/* date */
+table.cohort-heatmap th.date,
+table.cohort-heatmap td.date {
+    width: 200px;
 }
 
-
-table.cohort.heatmap .date {
-    display: inline-block;
-    width: 125px;
+/* total count */
+table.cohort-heatmap th.total-count,
+table.cohort-heatmap td.total-count {
+    width: 75px;
 }
 
-table.cohort.heatmap .total_count {
-    display: inline-block;
-    width: 50px;
-}
-
-table.cohort.heatmap td.avg_row {
-    border-top: 1px solid #aaa !important;
+table.cohort-heatmap tr.averages td {
+    border-top: 2px solid #DDD;
 }
 
 </style>
 {% endblock %}
 
 {% block content %}
-<h1>Cohort</h1>
+  <h1>Cohort</h1>
 
-<!-- <form>
-  Given users that
-  <select name="main-event"></select>
-
-  within the past
-  <select name="time-group"></select>
-  /
-  since
-  <select name="start-date"></select>
-
-  ,
-  how many also
-  <select name="event-name"></select>
-  <select name="event-name"></select>
-  <select name="event-name"></select>
-  ?
-  Group results by
-  <select name="time-group"></select>
-  .
-</form> -->
-
-<div id="cohort" class="form-horizontal">
-  <div class="form-group">
-    <span class="col-sm-2 control-label">
-      Of the users who
-    </span>
-
-    <div class="col-sm-2">
-      <select name="main-event" class="form-control">
-        <option></option>
-        {% for name, value in event_options %}
-        <option value="{{ value }}">{{ name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-  </div>
-
-
-  <div id="events">
-    <div class="form-group event">
-      <span class="col-sm-2 control-label">
-        <span class="additional-label">see how many</span>
+  <div id="cohort" class="form-horizontal">
+    <div class="form-group">
+      <span class="col-md-2 col-xs-3 control-label">
+        Of those users who
       </span>
 
-      <div class="col-sm-2">
-        <select name="event-name" class="form-control">
-          <option></option>
+      <div class="col-md-2 col-xs-4">
+        <select name="main-event" class="form-control">
+          <!-- <option selected disabled>did something</option> -->
+          <option selected disabled>...</option>
           {% for name, value in event_options %}
           <option value="{{ value }}">{{ name }}</option>
           {% endfor %}
         </select>
       </div>
+    </div>
 
-      <div class="col-sm-1">
-        <select name="event-op" class="form-control event-op">
-          {% for op in ['and', 'or'] %}
-          <option value="{{ op }}">{{ op.upper() }}</option>
+
+    <div id="events">
+      <div class="form-group event">
+        <span class="col-md-2 col-xs-3 control-label">
+          <span class="additional-label">see how many also</span>
+        </span>
+
+        <div class="col-md-2 col-xs-4">
+          <select name="event-name" class="form-control">
+            <!-- <option selected disabled>did something else</option> -->
+            <option selected disabled>...</option>
+            {% for name, value in event_options %}
+            <option value="{{ value }}">{{ name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-1 col-xs-2">
+          <select name="event-op" class="form-control event-op">
+            {% for op in ['and', 'or'] %}
+            <option value="{{ op }}">{{ op.upper() }}</option>
+            {% endfor %}
+          </select>
+
+          <button class="event-add btn btn-xs btn-gray">
+            <span class="glyphicon glyphicon-plus"><span class="sr-only">Add</span></span>
+          </button>
+
+          <button class="event-remove btn btn-xs btn-warning">
+            <span class="glyphicon glyphicon-minus"><span class="sr-only">remove condition</span></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <span class="col-md-2 col-xs-3 control-label">
+        each
+      </span>
+
+      <div class="col-md-2 col-xs-4">
+        <select name="time-group" class="form-control">
+          {% for time_group in time_groups %}
+          <option value="{{ time_group }}s">{{ time_group }}</option>
           {% endfor %}
         </select>
+        <!--
+        since
+        <select name="start-date"></select>
+        -->
+      </div>
+    </div>
 
-        <button class="event-remove btn btn-xs btn-warning">
-          <span class="glyphicon glyphicon-minus"><span class="sr-only">remove condition</span></span>
+
+    <div class="form-group">
+      <div class="col-md-2 col-md-offset-2 col-xs-4 col-xs-offset-3">
+        <button id="go" class="btn btn-success">
+          CHECK IT <span class="glyphicon glyphicon-ok"><span class="sr-only">Go</span></span>
         </button>
       </div>
     </div>
   </div>
 
-  <div class="form-group">
-    <span class="col-sm-2 control-label">
-      each
-    </span>
+  <hr />
 
-    <div class="col-sm-2">
-      <select name="time-group" class="form-control">
-        <option></option>
-        {% for time_group in time_groups %}
-        <option value="{{ time_group }}s">{{ time_group }}</option>
-        {% endfor %}
-      </select>
-      <!--
-      since
-      <select name="start-date"></select>
-      -->
-    </div>
-  </div>
-
-
-  <div class="form-group">
-    <div class="col-sm-2 col-sm-offset-2">
-      <button id="add" class="btn btn-gray">
-        <span class="glyphicon glyphicon-plus"><span class="sr-only">Add</span></span>
-      </button>
-
-      <button id="go" class="btn btn-success">
-        Check <span class="glyphicon glyphicon-ok"><span class="sr-only">Go</span></span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<hr />
-
-<div id="cohort-heatmap"></div>
-
-<!-- <ul id="conditions" class="list-unstyled" style="margin-top:80px;">
-    <li class="condition">
-      <div class="row">
-        <div class="col-md-1">
-          <label class="subtractions" style="margin-top: 0.5em;">Conditions</label>
-          <select name="operation" class="form-control additions">
-            <option value="and">AND</option>
-            <option value="or">OR</option>
-          </select>
-        </div>
-
-        <div class="col-md-2">
-          <select name="event-name" class="form-control">
-            <option></option>
-            {% for event_name in event_names %}
-            <option value="{{ event_name }}">{{ event_name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="col-md-2">
-          <select name="time-group" class="form-control subtractions">
-            <option></option>
-            {% for time_group in time_groups %}
-            <option value="{{ time_group }}">{{ time_group }}</option>
-            {% endfor %}
-          </select>
-        </div>
-
-        <div class="col-md-1">
-          <button class="remove additions btn btn-xs btn-warning"><span class="glyphicon glyphicon-minus"><span class="sr-only">remove condition</span></span></button>
-        </div>
-      </div>
-    </li>
-
-    <br />
-  </ul>
-
-  <button id="add" class="btn btn-gray"><span class="glyphicon glyphicon-plus"><span class="sr-only">Add</span></span></button>
-
-  <button id="go" class="btn btn-success"><span class="glyphicon glyphicon-ok"><span class="sr-only">Go</span></span></button>
-
-  <div id="cohort-heatmap" class="well"> (Add some conditions to get started...) </div> -->
-
+  <div id="cohort-heatmap"></div>
 
   {% for e, event_name in event_options %}
     <div id="{{ event_name }}" class="event-name">
@@ -222,48 +153,58 @@ table.cohort.heatmap td.avg_row {
 {% block js %}
 <script>
 
-  $('.event:first-of-type .event-op, .event:first-of-type .event-remove').hide();
+  // meh.
+  function toggleGo() {
+    // (visually) disable go button if required fields missing
+    var one = $('select[name=main-event]').val();
+    var two = $('select[name=event-name]:first-of-type').val();
+    var tim = $('select[name=time-group]').val();
 
-  $('#add').on('click', function() {
-    $('.event:last-of-type').clone().appendTo('#events');
+    if (one && two && tim) {
+      $('#go').removeClass('disabled');
+    } else {
+      $('#go').addClass('disabled');
+    }
+  }
 
-    $('.event:nth-last-of-type(2) .event-op').show();
-
+  // meh.
+  function toggleEventControls() {
+    // all but last event have and/or to operate with subsequent event
+    $('.event:last-of-type .event-op').hide();
+    $('.event:not(:last-of-type) .event-op').show();
+    // only last event has add/remove options visible
+    $('.event:last-of-type .event-add').show();
+    $('.event:last-of-type .event-remove').show();
+    $('.event:not(:last-of-type) .event-add').hide();
+    $('.event:not(:last-of-type) .event-remove').hide();
+    // first event never has remove buttons
+    $('.event:first-of-type .event-remove').hide();
+    // only first event has label
     $('.event:not(:first-of-type) .additional-label').hide();
 
-    $('.event:not(:last-of-type) .event-remove').hide();
-    if ($('.event').length != 1) {
-      $('.event:last-of-type .event-remove').show();
-    }
+    toggleGo();
+  }
+
+  // some things get some buttons
+  toggleEventControls();
+
+  $('select').on('change', toggleGo);
+
+  // add event
+  $('#events').on('click', '.event-add', function() {
+    $('.event:last-of-type').clone().appendTo('#events');
+    toggleEventControls();
   });
 
+  // remove event
   $('#events').on('click', '.event-remove', function() {
     $(this).closest('.event').remove();
-
-    // not very sophisticated
-    $('.event:last-of-type .event-op').hide();
-    $('.event:last-of-type .event-remove').show();
-    if ($('.event').length < 2) {
-      $('.event .event-remove').hide();
-    }
+    toggleEventControls();
   });
 
-  // $('#add').on('click', function() {
-  //   $('.event:last-of-type').clone().appendTo('#events');
-  //
-  //   // For first new addition, handle unique show/hide from first condition
-  //   if ($('.event').length == 2) {
-  //     $('.event:last-of-type .additional').show();
-  //   }
-  // });
-  //
-  // $('#events').on('click', '.remove', function() {
-  //   $(this).closest('.event').remove();
-  // });
-
+  // generate cohort heatmap
   $('#go').on('click', function() {
 
-    console.log('hashtag go');
     // format the data
     // submit the data
     // AJAX + response
@@ -273,30 +214,6 @@ table.cohort.heatmap td.avg_row {
     //////////////////
 
     // format the data
-    var cohort = {};
-    // var condition = $('.condition:first-of-type');
-    // var ops = $('.condition:not(:first-of-type)');
-    //
-    // var cohort = {
-    //   // 'event': {
-    //   //   'name': condition.find('select[name=event-name]').val(),
-    //   //   'range': condition.find('select[name=interval]').val()
-    //   // }
-    //   'event_name': condition.find('select[name=event-name]').val(),
-    //   'time_group': condition.find('select[name=time-group]').val()
-    // };
-    //
-    // if (ops.length) {
-    //   cohort['ops'] = [];
-    //   ops.each(function(index) {
-    //     var opEvent = {
-    //       'name': $(this).find('select[name=event-name]').val(),
-    //       // 'range': $(this).find('select[name=interval]').val(),
-    //       'operation': $(this).find('select[name=operation]').val()
-    //     };
-    //     cohort['ops'].push(opEvent);
-    //   });
-    // }
 
     var cohort = {
       'time_group': $('select[name=time-group]').val(),
@@ -310,12 +227,11 @@ table.cohort.heatmap td.avg_row {
       additionalEvents.each(function(index) {
         // console.log($(this).prev('.event').find('select[name=event-op]').val(),
         //             $(this).find('select[name=event-name]').val());
-        var thisEvent = {
-          'name': $(this).find('select[name=event-name]').val(),
-          'op': $(this).prev('.event').find('select[name=event-op]').val()
-        };
-
-        cohort.additional_events.push(thisEvent);
+        var name = $(this).find('select[name=event-name]').val();
+        var op = $(this).prev('.event').find('select[name=event-op]').val() || 'and';
+        if (name) {
+          cohort.additional_events.push({'name': name, 'op': op});
+        }
       });
     }
 

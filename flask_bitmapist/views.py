@@ -98,7 +98,7 @@ def cohort():
 
         # intervals = ['year', 'month', 'week', 'day']
         # return render_template('bitmapist/cohort.html', event_names=event_names, intervals=intervals, events=events)
-        time_groups = ['year', 'month', 'week', 'day']
+        time_groups = ['day', 'week', 'month', 'year']
         return render_template('bitmapist/cohort.html', event_options=event_options, time_groups=time_groups, events=events)
 
     elif request.method == 'POST':
@@ -126,21 +126,41 @@ def cohort():
 
         # TEMPORARY
         as_percent = 1
-        # I think their 'rows' and 'results' are backwards? Get 25 rows, 12 cols
+        # results & rows seem switched
         num_results = 25
-        num_of_rows = 12
+        num_of_rows = 12  # num_of_rows + 1 columns are produced.
         # END TEMP
 
         dates_data = get_dates_data(event_filters, time_group)
 
+        # one way or another, that much mathing shouldn't be in the template
+        totals = [0] * (num_of_rows + 3)  # num_of_rows+1 cols, date, total
+        # THIS IS MADNESS
+        for row_data in dates_data:
+            for idx, col_data in enumerate(row_data):
+                if idx == 0:
+                    continue  # datetime
+
+                if col_data:
+                    totals[idx] += col_data
+
+        # THIS IS SPARTA
+        n = len(dates_data)
+        averages = [t / n for t in totals]
+        averages[0] = None  # datetime
+
+        # print totals
+        # print n
+        # print averages
+
         # print dates_data
 
-        # return jsonify(dates_data)
         return render_template('bitmapist/_heatmap.html',
                        event_filters=event_filters,
                        dates_data=dates_data,
                        as_percent=as_percent,
                        time_group=time_group,
                        num_results=num_results,
-                       num_of_rows=num_of_rows
+                       num_of_rows=num_of_rows,
+                       averages=averages
                      )
