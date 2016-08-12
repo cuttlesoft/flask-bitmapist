@@ -10,14 +10,14 @@ About
 ------------
 
 [Bitmapist](https://github.com/Doist/bitmapist) is:
-> [A] Python library [that] makes it possible to implement real-time, highly scalable analytics that can answer following questions:
+> [A] Python library [that] makes it possible to implement real-time, highly scalable analytics that can answer the following questions:
     <br>
     - Has user 123 been online today? This week? This month? <br>
     - Has user 123 performed action "X"? <br>
     - How many users have been active have this month? This hour? <br>
     - How many unique users have performed action "X" this week? <br>
-    - How many % of users that were active last week are still active? <br>
-    - How many % of users that were active last month are still active this month? <br>
+    - What % of users that were active last week are still active? <br>
+    - What % of users that were active last month are still active this month? <br>
     - What users performed action "X"? <br>
 
 

@@ -16,7 +16,7 @@ from flask import Blueprint, jsonify, render_template, request
 
 from bitmapist import get_event_names, DayEvents, WeekEvents, MonthEvents, YearEvents  # BitOpAnd, BitOpOr
 
-from .utils import get_dates_data, get_event_data
+from .utils import get_cohort, get_event_data
 
 
 
@@ -71,7 +71,7 @@ def cohort():
     if request.method == 'GET':
         now = datetime.utcnow()
         event_names = get_event_names()
-        # TEMPORARY for display niceness
+        # TEMPORARY? for display niceness
         event_options = []
         for event_name in event_names:
             if 'user_' in event_name:
@@ -115,6 +115,7 @@ def cohort():
         if additional_events:
             for additional_event in additional_events:
                 event_filters.append(additional_event.get('name'))
+
         # if ops:
         #     for op in ops:
         #         if op.get('operation') == 'and':
@@ -122,16 +123,27 @@ def cohort():
         #         elif op.get('operation') == 'or':
         #             cohort = cohort | get_event_data(op.get('name'), op.get('range'))
 
-        print event_filters
+        # print event_filters
 
         # TEMPORARY
-        as_percent = 1
+        as_percent = True
         # results & rows seem switched
-        num_results = 25
-        num_of_rows = 12  # num_of_rows + 1 columns are produced.
+        num_results = 10  # 25
+        num_of_rows = 9  # num_of_rows + 1 columns are produced.
         # END TEMP
 
-        dates_data = get_dates_data(event_filters, time_group)
+        # dates_data = get_dates_data(event_filters, time_group=time_group,
+        #                             as_percent=as_percent,
+        #                             num_results=num_results,
+        #                             num_of_rows=num_of_rows)
+
+        # cohort_data = ...
+        dates_data = get_cohort(primary_event, secondary_event,
+                                additional_events=additional_events,
+                                time_group=time_group,
+                                as_percent=as_percent,
+                                num_rows=num_results,
+                                num_cols=num_of_rows)
 
         # one way or another, that much mathing shouldn't be in the template
         totals = [0] * (num_of_rows + 3)  # num_of_rows+1 cols, date, total
