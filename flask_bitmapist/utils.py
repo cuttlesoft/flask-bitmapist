@@ -14,7 +14,7 @@ from urlparse import urlparse
 from dateutil.relativedelta import relativedelta
 
 from bitmapist import (DayEvents, WeekEvents, MonthEvents, YearEvents,
-                       BitOpAnd, delete_runtime_bitop_keys)
+                       BitOpAnd, BitOpOr, delete_runtime_bitop_keys)
 
 
 def _get_redis_connection(redis_url=None):
@@ -128,6 +128,7 @@ def get_cohort(primary_event, secondary_event, additional_events=[],
             #     select2b_events = fn_get_events(select2b, delta_now, system)
             #     select2_events = BitOpAnd(system, select2_events, select2b_events)
 
+            print additional_events
 
             # TODO: chain events here maybe?
 
@@ -136,15 +137,27 @@ def get_cohort(primary_event, secondary_event, additional_events=[],
                 result.append('')
                 continue
 
-            both_events = BitOpAnd(system, primary_events, secondary_events)
-            both_total = len(both_events)
+            if additional_events:
+                for additional_event in additional_events:
+                    name = additional_event.get('name')
+                    op = additional_event.get('op')
+                    additional = fn_get_events(name, incremented_time, system)
+
+                    if op == 'or':
+                        secondary_events = BitOpOr(system, secondary_events, additional)
+                    else:
+                        secondary_events = BitOpAnd(system, secondary_events, additional)
+
+
+            combined_events = BitOpAnd(system, primary_events, secondary_events)
+            combined_total = len(combined_events)
 
             # Append to result
             if as_percent:
-                both_percent = float(both_total) / primary_total * 100
-                result.append(both_percent)
+                combined_percent = float(combined_total) / primary_total * 100
+                result.append(combined_percent)
             else:
-                result.append(both_total)
+                result.append(combined_total)
 
         dates.append(result)
         event_time += increment_delta(1)
