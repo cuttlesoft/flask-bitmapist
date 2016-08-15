@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
-from random import randint
 
 from flask import request
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
@@ -33,17 +32,16 @@ def setup_users(now=None):
         'd': 'user_deleted',
     }
 
-    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od'
     users = [
-        ('iocud', randint(1, 100)),
-        ('iocd',  randint(1, 100)),
-        ('iou',   randint(1, 100)),
-        ('icd',   randint(1, 100)),
-        ('io',    randint(1, 100)),
-        ('ocud',  randint(1, 100)),
-        ('cud',   randint(1, 100)),
-        ('od',    randint(1, 100)),
-        ('d',     randint(1, 100))
+        ('iocud', 11),
+        ('iocd',  22),
+        ('iou',   33),
+        ('icd',   44),
+        ('io',    55),
+        ('ocud',  66),
+        ('cud',   77),
+        ('od',    88),
+        ('d',     99)
     ]
 
     for user in users:
@@ -68,25 +66,13 @@ def setup_chain_events(time_group='days'):
     }
     return setup_users(), addons
 
-# # For use with 'or', could get 'and' lists and use `list(set(a).union(b))`?
-# def target_users(users, chars):
-#     target_users = []
-#     for user in users:
-#         matched_chars = [c for c in chars if c in user[0]]
-#         if len(matched_chars) == len(chars):
-#             target_users.append(user)
-#     return target_users
 
 def test_get_cohort():
-    # test results from simple 2 event &
-
-    # test
     pass
 
 
 def test_chain_events():
     time_group = 'days'
-    # base, addons, users = setup_chain_events(time_group)
     users, addons = setup_chain_events(time_group)
 
     # test results from no additional events
@@ -94,8 +80,6 @@ def test_chain_events():
 
     # which users should have 'user_logged_in' events marked
     logged_in_users = [u for u in users if 'i' in u[0]]  # iocud/iocd/iou/icd/io
-    # logged_in_users = target_users(users, 'i')
-
 
     assert len(logged_in_events) == len(logged_in_users)
     for u in logged_in_users:
@@ -108,18 +92,28 @@ def test_chain_events_with_and():
     users, addons = setup_chain_events(time_group)
 
     # test results from 1-3 additional event with AND operator(s)
-    i_and_o = chain_events(base, [addons['and_o']], now, time_group)
-    i_and_o_and_c = chain_events(base, [addons['and_o'], addons['and_c']], now, time_group)
-    i_and_o_and_c_and_d = chain_events(base, [addons['and_o'], addons['and_c'], addons['and_d']], now, time_group)
-
-    # o_users = target_users(users, 'io')  # iocud/iocd/iou/io
-    # oc_users = target_users(users, 'ioc')  # iocud/iocd
-    # ocd_users = target_users(users, 'iocd')  # iocud/iocd
+    one = chain_events(base, [addons['and_o']], now, time_group)
+    two = chain_events(base, [addons['and_o'], addons['and_c']], now, time_group)
+    three = chain_events(base, [addons['and_o'], addons['and_c'], addons['and_d']], now, time_group)
 
     # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
-    assert len(i_and_o) == len(['iocud', 'iocd', 'iou', 'io'])
-    assert len(i_and_o_and_c) == len(['iocud', 'iocd'])
-    assert len(i_and_o_and_c_and_d) == len(['iocud', 'iocd'])
+    one_users = [u for u in users if u[0] in ['iocud', 'iocd', 'iou', 'io']]
+    two_users = [u for u in users if u[0] in ['iocud', 'iocd']]
+    three_users = [u for u in users if u[0] in ['iocud', 'iocd']]
+
+    # check lengths
+    assert len(one) == len(one_users)
+    assert len(two) == len(two_users)
+    assert len(three) == len(three_users)
+
+    # check contents
+    for user in one_users:
+        assert user[1] in one
+    for user in two_users:
+        assert user[1] in two
+    for user in three_users:
+        assert user[1] in three
+
 
 def test_chain_events_with_or():
     base = 'user_logged_in'
@@ -127,14 +121,28 @@ def test_chain_events_with_or():
     users, addons = setup_chain_events(time_group)
 
     # test results from 1-3 additional event with OR operator(s)
-    i_or_o = chain_events(base, [addons['or_o']], now, time_group)
-    i_or_o_or_u = chain_events(base, [addons['or_o'], addons['or_u']], now, time_group)
-    i_or_o_or_u_or_d = chain_events(base, [addons['or_o'], addons['or_u'], addons['or_d']], now, time_group)
+    one = chain_events(base, [addons['or_o']], now, time_group)
+    two = chain_events(base, [addons['or_o'], addons['or_u']], now, time_group)
+    three = chain_events(base, [addons['or_o'], addons['or_u'], addons['or_d']], now, time_group)
 
-    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
-    assert len(i_or_o) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'od'])
-    assert len(i_or_o_or_u) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od'])
-    assert len(i_or_o_or_u_or_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])
+    # out of: 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
+    one_users = [u for u in users if u[0] in ['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'od']]
+    two_users = [u for u in users if u[0] in ['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od']]
+    three_users = [u for u in users if u[0] in ['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd']]
+
+    # check lengths
+    assert len(one) == len(one_users)
+    assert len(two) == len(two_users)
+    assert len(three) == len(three_users)
+
+    # check contents
+    for user in one_users:
+        assert user[1] in one
+    for user in two_users:
+        assert user[1] in two
+    for user in three_users:
+        assert user[1] in three
+
 
 def test_chain_events_with_1_and_1_or():
     base = 'user_logged_in'
@@ -142,12 +150,23 @@ def test_chain_events_with_1_and_1_or():
     users, addons = setup_chain_events(time_group)
 
     # test results from 2 additional events with 1 'and' + 1 'or' operator(s)
-    i_and_o_or_c = chain_events(base, [addons['and_o'], addons['or_c']], now, time_group)  # & |
-    i_or_o_and_c = chain_events(base, [addons['or_o'], addons['and_c']], now, time_group)  # | &
+    and_or = chain_events(base, [addons['and_o'], addons['or_c']], now, time_group)
+    or_and = chain_events(base, [addons['or_o'], addons['and_c']], now, time_group)
 
-    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
-    assert len(i_and_o_or_c) == len(['iocud', 'iocd', 'iou', 'icd', 'io'])
-    assert len(i_or_o_and_c) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
+    # out of: 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
+    and_or_users = [u for u in users if u[0] in ['iocud', 'iocd', 'iou', 'icd', 'io']]
+    or_and_users = [u for u in users if u[0] in ['iocud', 'iocd', 'icd', 'ocud']]
+
+    # check lengths
+    assert len(and_or) == len(and_or_users)
+    assert len(or_and) == len(or_and_users)
+
+    # check contents
+    for user in and_or_users:
+        assert user[1] in and_or
+    for user in or_and_users:
+        assert user[1] in or_and
+
 
 def test_chain_events_with_2_and_1_or():
     base = 'user_logged_in'
@@ -155,14 +174,27 @@ def test_chain_events_with_2_and_1_or():
     users, addons = setup_chain_events(time_group)
 
     # test results from 3 additional events with 2 'and' + 1 'or' operator(s)
-    i_and_o_and_c_or_d = chain_events(base, [addons['and_o'], addons['and_c'], addons['or_d']], now, time_group)  # & & |
-    i_and_o_or_c_and_d = chain_events(base, [addons['and_o'], addons['or_c'], addons['and_d']], now, time_group)  # & | &
-    i_or_o_and_c_and_d = chain_events(base, [addons['or_o'], addons['and_c'], addons['and_d']], now, time_group)  # | & &
+    and_and_or = chain_events(base, [addons['and_o'], addons['and_c'], addons['or_d']], now, time_group)
+    and_or_and = chain_events(base, [addons['and_o'], addons['or_c'], addons['and_d']], now, time_group)
+    or_and_and = chain_events(base, [addons['or_o'], addons['and_c'], addons['and_d']], now, time_group)
 
-    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
-    assert len(i_and_o_and_c_or_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
-    assert len(i_and_o_or_c_and_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
-    assert len(i_or_o_and_c_and_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
+    # out of: 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
+    and_and_or_users = [u for u in users if u[0] in ['iocud', 'iocd']]
+    and_or_and_users = [u for u in users if u[0] in ['iocud', 'iocd', 'icd']]
+    or_and_and_users = [u for u in users if u[0] in ['iocud', 'iocd', 'icd', 'ocud']]
+
+    # check lengths
+    assert len(and_and_or) == len(and_and_or_users)
+    assert len(and_or_and) == len(and_or_and_users)
+    assert len(or_and_and) == len(or_and_and_users)
+
+    # check contents
+    for user in and_and_or_users:
+        assert user[1] in and_and_or
+    for user in and_or_and_users:
+        assert user[1] in and_or_and
+    for user in or_and_and_users:
+        assert user[1] in or_and_and
 
 
 def test_chain_events_with_1_and_2_or():
@@ -171,14 +203,27 @@ def test_chain_events_with_1_and_2_or():
     users, addons = setup_chain_events(time_group)
 
     # test results from 3 additional events with 1 'and' + 2 'or' operator(s)
-    i_or_o_or_c_and_d = chain_events(base, [addons['or_o'], addons['or_c'], addons['and_d']], now, time_group)  # | | &
-    i_or_o_and_c_or_d = chain_events(base, [addons['or_o'], addons['and_c'], addons['or_d']], now, time_group)  # | & |
-    i_and_o_or_c_or_d = chain_events(base, [addons['and_o'], addons['or_c'], addons['or_d']], now, time_group)  # & | |
+    or_or_and = chain_events(base, [addons['or_u'], addons['or_c'], addons['and_d']], now, time_group)
+    or_and_or = chain_events(base, [addons['or_u'], addons['and_c'], addons['or_d']], now, time_group)
+    and_or_or = chain_events(base, [addons['and_u'], addons['or_c'], addons['or_d']], now, time_group)
 
-    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
-    assert len(i_or_o_or_c_and_d) == len(['iocud', 'iocd', 'icd', 'ocud', 'cud', 'od', 'd'])  # ?
-    assert len(i_or_o_and_c_or_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
-    assert len(i_and_o_or_c_or_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
+    # out of: 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
+    or_or_and_users = [u for u in users if u[0] in ['iocud', 'iocd', 'icd', 'ocud', 'cud']]
+    or_and_or_users = [u for u in users if u[0] in ['iocud', 'iocd', 'icd', 'ocud', 'cud']]
+    and_or_or_users = [u for u in users if u[0] in ['iocud', 'iocd', 'iou', 'icd']]
+
+    # check lengths
+    assert len(or_or_and) == len(or_or_and_users)
+    assert len(or_and_or) == len(or_and_or_users)
+    assert len(and_or_or) == len(and_or_or_users)
+
+    # check contents
+    for user in or_or_and_users:
+        assert user[1] in or_or_and
+    for user in or_and_or_users:
+        assert user[1] in or_and_or
+    for user in and_or_or_users:
+        assert user[1] in and_or_or
 
 
 # FLASK LOGIN

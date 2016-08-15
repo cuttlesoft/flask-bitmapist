@@ -131,29 +131,38 @@ def chain_events(base, additional, time_pt, time_group, system='default'):
     """
 
     fn_get_events = _events_fn(time_group)
-
     base_events = fn_get_events(base, time_pt, system)
 
     if not base_events.has_events_marked():
         return ''
 
     if additional:
-        # TODO: handle 'or' so that it only chains with immediately previous
-        #       event; for example logged_in && logged_out && created || deleted
-        #       should not be overwhelmed by the '|| deleted'; currently, it
-        #       works out to ((logged_in && logged_out) && created) || deleted,
-        #       but it be like logged_in && logged_out && (created || deleted).
-        #       Similarly, logged_in && logged_out || created && deleted should
-        #       be logged_in && (logged_out || created) && deleted, for example.
-        for name_and_op in additional:
-            name = name_and_op.get('name')
-            op = name_and_op.get('op', 'and')
+        for idx, additional_event in enumerate(additional):
+            event_name = additional_event.get('name')
+            bitmapist_events = fn_get_events(event_name, time_pt, system)
+            additional[idx]['events'] = bitmapist_events
 
-            additional_event = fn_get_events(name, time_pt, system)
-            if op == 'or':
-                base_events = BitOpOr(system, base_events, additional_event)
+        # Each OR should operate only on its immediate predecessor, e.g.,
+        #     `A && B && C || D` should be handled as ~ `A && B && (C || D)`,
+        #     and
+        #     `A && B || C && D` should be handled as ~ `A && (B || C) && D`.
+        or_event_indices = [idx for idx, e in enumerate(additional) if e['op'] == 'or']
+
+        for idx in reversed(or_event_indices):
+            # If first event, OR will operate on base event as normal
+            if idx > 0:
+                prev_event = additional[idx - 1].get('events')
+                or_event = additional.pop(idx).get('events')
+
+                combined_events = BitOpOr(system, prev_event, or_event)
+                additional[idx - 1]['events'] = combined_events
+
+        for additional_event in additional:
+            events = additional_event.get('events')
+            if additional_event.get('op') == 'or':
+                base_events = BitOpOr(system, base_events, events)
             else:
-                base_events = BitOpAnd(system, base_events, additional_event)
+                base_events = BitOpAnd(system, base_events, events)
 
     return base_events
 
