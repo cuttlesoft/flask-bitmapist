@@ -96,8 +96,6 @@ def cohort():
             events[event_name] = event
         # END TEMP
 
-        # intervals = ['year', 'month', 'week', 'day']
-        # return render_template('bitmapist/cohort.html', event_names=event_names, intervals=intervals, events=events)
         time_groups = ['day', 'week', 'month', 'year']
         return render_template('bitmapist/cohort.html', event_options=event_options, time_groups=time_groups, events=events)
 
@@ -109,21 +107,10 @@ def cohort():
         secondary_event = data.get('secondary_event', '')
         additional_events = data.get('additional_events', [])
 
-        # cohort = get_event_data(event.get('name'), event.get('range'))
-
         event_filters = [primary_event, secondary_event]
         if additional_events:
             for additional_event in additional_events:
                 event_filters.append(additional_event.get('name'))
-
-        # if ops:
-        #     for op in ops:
-        #         if op.get('operation') == 'and':
-        #             cohort = cohort & get_event_data(op.get('name'), op.get('range'))
-        #         elif op.get('operation') == 'or':
-        #             cohort = cohort | get_event_data(op.get('name'), op.get('range'))
-
-        # print event_filters
 
         # TEMPORARY
         as_percent = True
@@ -132,47 +119,32 @@ def cohort():
         num_of_rows = 9  # num_of_rows + 1 columns are produced.
         # END TEMP
 
-        # dates_data = get_dates_data(event_filters, time_group=time_group,
-        #                             as_percent=as_percent,
-        #                             num_results=num_results,
-        #                             num_of_rows=num_of_rows)
+        # TODO: this?
+        # dates_data = get_dates(time_group, num_rows, num_cols)
+        # cohort_data = get_cohort(primary, secondary, additional, dates)
+        cohort, dates = get_cohort(primary_event, secondary_event,
+                                   additional_events=additional_events,
+                                   time_group=time_group,
+                                   # as_percent=as_percent,
+                                   num_rows=num_results,
+                                   num_cols=num_of_rows)
 
-        # cohort_data = ...
-        dates_data = get_cohort(primary_event, secondary_event,
-                                additional_events=additional_events,
-                                time_group=time_group,
-                                as_percent=as_percent,
-                                num_rows=num_results,
-                                num_cols=num_of_rows)
+        row_totals = [0] * num_rows
+        col_totals = [0] * num_cols
+        for i, row in enumerate(cohort):
+            for j, val in enumerate(row):
+                row_totals[i] += val
+                col_totals[j] += val
 
-        # one way or another, that much mathing shouldn't be in the template
-        totals = [0] * (num_of_rows + 3)  # num_of_rows+1 cols, date, total
-        # THIS IS MADNESS
-        for row_data in dates_data:
-            for idx, col_data in enumerate(row_data):
-                if idx == 0:
-                    continue  # datetime
-
-                if col_data:
-                    totals[idx] += col_data
-
-        # THIS IS SPARTA
-        n = len(dates_data)
-        averages = [t / n for t in totals]
-        averages[0] = None  # datetime
-
-        # print totals
-        # print n
-        # print averages
-
-        # print dates_data
+        averages = [float(total) / num_rows for total in col_totals]
 
         return render_template('bitmapist/_heatmap.html',
-                       event_filters=event_filters,
-                       dates_data=dates_data,
-                       as_percent=as_percent,
+                       cohort=cohort,
+                       dates=dates,
+                       totals=row_totals,
+                       averages=averages,
                        time_group=time_group,
-                       num_results=num_results,
-                       num_of_rows=num_of_rows,
-                       averages=averages
+                       num_rows=num_rows,
+                       num_cols=num_cols,
+                       as_percent=as_percent
                      )

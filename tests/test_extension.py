@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
+from random import randint
 
 from flask import request
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 
-from flask_bitmapist import (mark, MonthEvents, WeekEvents, DayEvents, HourEvents,
-                             mark_event, unmark_event)
+from flask_bitmapist import (chain_events, get_cohort, get_event_data,
+                             mark, mark_event, unmark_event,
+                             MonthEvents, WeekEvents, DayEvents, HourEvents)
 from flask_bitmapist.extensions.flask_login import mark_login, mark_logout
 
 
@@ -17,11 +19,172 @@ mark_logout
 now = datetime.utcnow()
 
 
+# COHORTS
+
+def setup_users(now=None):
+    now = now or datetime.utcnow()
+
+    # mark specific events for single user with user_string as user_id
+    event_mappings = {
+        'i': 'user_logged_in',
+        'o': 'user_logged_out',
+        'c': 'user_inserted',  # created
+        'u': 'user_updated',
+        'd': 'user_deleted',
+    }
+
+    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od'
+    users = [
+        ('iocud', randint(1, 100)),
+        ('iocd',  randint(1, 100)),
+        ('iou',   randint(1, 100)),
+        ('icd',   randint(1, 100)),
+        ('io',    randint(1, 100)),
+        ('ocud',  randint(1, 100)),
+        ('cud',   randint(1, 100)),
+        ('od',    randint(1, 100)),
+        ('d',     randint(1, 100))
+    ]
+
+    for user in users:
+        for u in user[0]:
+            event_name = event_mappings.get(u, None)
+            if event_name:
+                mark_event(event_name, user[1])
+
+    return users
+
+
+def setup_chain_events(time_group='days'):
+    addons = {
+        'and_o': { 'name': 'user_logged_out', 'op': 'and' },
+        'and_c': { 'name': 'user_inserted',   'op': 'and' },
+        'and_u': { 'name': 'user_updated',    'op': 'and' },
+        'and_d': { 'name': 'user_deleted',    'op': 'and' },
+        'or_o':  { 'name': 'user_logged_out', 'op': 'or' },
+        'or_c':  { 'name': 'user_inserted',   'op': 'or' },
+        'or_u':  { 'name': 'user_updated',    'op': 'or' },
+        'or_d':  { 'name': 'user_deleted',    'op': 'or' }
+    }
+    return setup_users(), addons
+
+# # For use with 'or', could get 'and' lists and use `list(set(a).union(b))`?
+# def target_users(users, chars):
+#     target_users = []
+#     for user in users:
+#         matched_chars = [c for c in chars if c in user[0]]
+#         if len(matched_chars) == len(chars):
+#             target_users.append(user)
+#     return target_users
+
+def test_get_cohort():
+    # test results from simple 2 event &
+
+    # test
+    pass
+
+
+def test_chain_events():
+    time_group = 'days'
+    # base, addons, users = setup_chain_events(time_group)
+    users, addons = setup_chain_events(time_group)
+
+    # test results from no additional events
+    logged_in_events = chain_events('user_logged_in', [], now, time_group)
+
+    # which users should have 'user_logged_in' events marked
+    logged_in_users = [u for u in users if 'i' in u[0]]  # iocud/iocd/iou/icd/io
+    # logged_in_users = target_users(users, 'i')
+
+
+    assert len(logged_in_events) == len(logged_in_users)
+    for u in logged_in_users:
+        assert u[1] in get_event_data('user_logged_in', time_group, now)
+
+
+def test_chain_events_with_and():
+    base = 'user_logged_in'
+    time_group = 'days'
+    users, addons = setup_chain_events(time_group)
+
+    # test results from 1-3 additional event with AND operator(s)
+    i_and_o = chain_events(base, [addons['and_o']], now, time_group)
+    i_and_o_and_c = chain_events(base, [addons['and_o'], addons['and_c']], now, time_group)
+    i_and_o_and_c_and_d = chain_events(base, [addons['and_o'], addons['and_c'], addons['and_d']], now, time_group)
+
+    # o_users = target_users(users, 'io')  # iocud/iocd/iou/io
+    # oc_users = target_users(users, 'ioc')  # iocud/iocd
+    # ocd_users = target_users(users, 'iocd')  # iocud/iocd
+
+    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
+    assert len(i_and_o) == len(['iocud', 'iocd', 'iou', 'io'])
+    assert len(i_and_o_and_c) == len(['iocud', 'iocd'])
+    assert len(i_and_o_and_c_and_d) == len(['iocud', 'iocd'])
+
+def test_chain_events_with_or():
+    base = 'user_logged_in'
+    time_group = 'days'
+    users, addons = setup_chain_events(time_group)
+
+    # test results from 1-3 additional event with OR operator(s)
+    i_or_o = chain_events(base, [addons['or_o']], now, time_group)
+    i_or_o_or_u = chain_events(base, [addons['or_o'], addons['or_u']], now, time_group)
+    i_or_o_or_u_or_d = chain_events(base, [addons['or_o'], addons['or_u'], addons['or_d']], now, time_group)
+
+    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
+    assert len(i_or_o) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'od'])
+    assert len(i_or_o_or_u) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od'])
+    assert len(i_or_o_or_u_or_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])
+
+def test_chain_events_with_1_and_1_or():
+    base = 'user_logged_in'
+    time_group = 'days'
+    users, addons = setup_chain_events(time_group)
+
+    # test results from 2 additional events with 1 'and' + 1 'or' operator(s)
+    i_and_o_or_c = chain_events(base, [addons['and_o'], addons['or_c']], now, time_group)  # & |
+    i_or_o_and_c = chain_events(base, [addons['or_o'], addons['and_c']], now, time_group)  # | &
+
+    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
+    assert len(i_and_o_or_c) == len(['iocud', 'iocd', 'iou', 'icd', 'io'])
+    assert len(i_or_o_and_c) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
+
+def test_chain_events_with_2_and_1_or():
+    base = 'user_logged_in'
+    time_group = 'days'
+    users, addons = setup_chain_events(time_group)
+
+    # test results from 3 additional events with 2 'and' + 1 'or' operator(s)
+    i_and_o_and_c_or_d = chain_events(base, [addons['and_o'], addons['and_c'], addons['or_d']], now, time_group)  # & & |
+    i_and_o_or_c_and_d = chain_events(base, [addons['and_o'], addons['or_c'], addons['and_d']], now, time_group)  # & | &
+    i_or_o_and_c_and_d = chain_events(base, [addons['or_o'], addons['and_c'], addons['and_d']], now, time_group)  # | & &
+
+    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
+    assert len(i_and_o_and_c_or_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
+    assert len(i_and_o_or_c_and_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
+    assert len(i_or_o_and_c_and_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
+
+
+def test_chain_events_with_1_and_2_or():
+    base = 'user_logged_in'
+    time_group = 'days'
+    users, addons = setup_chain_events(time_group)
+
+    # test results from 3 additional events with 1 'and' + 2 'or' operator(s)
+    i_or_o_or_c_and_d = chain_events(base, [addons['or_o'], addons['or_c'], addons['and_d']], now, time_group)  # | | &
+    i_or_o_and_c_or_d = chain_events(base, [addons['or_o'], addons['and_c'], addons['or_d']], now, time_group)  # | & |
+    i_and_o_or_c_or_d = chain_events(base, [addons['and_o'], addons['or_c'], addons['or_d']], now, time_group)  # & | |
+
+    # 'iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'
+    assert len(i_or_o_or_c_and_d) == len(['iocud', 'iocd', 'icd', 'ocud', 'cud', 'od', 'd'])  # ?
+    assert len(i_or_o_and_c_or_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
+    assert len(i_and_o_or_c_or_d) == len(['iocud', 'iocd', 'iou', 'icd', 'io', 'ocud', 'cud', 'od', 'd'])  # ?
+
+
 # FLASK LOGIN
 
 class User(UserMixin):
     id = None
-
 
 def test_flask_login_user_login(app):
     # LoginManager could be set up in app fixture in conftest.py instead
@@ -33,8 +196,6 @@ def test_flask_login_user_login(app):
     #       microsecond to temporarily circumvent, but there should be a better
     #       way to fix user_id assignment (or tear down redis or something)
     user_id = datetime.now().microsecond
-    # user_id = 1
-    # print user_id
 
     with app.test_request_context():
         # set up and log in user
