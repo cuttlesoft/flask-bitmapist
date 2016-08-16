@@ -364,9 +364,9 @@ def test_index(app, bitmap, client):
         assert request.endpoint == 'bitmapist.index'
 
 
-def test_events(app, bitmap, client):
-    with app.test_request_context('/bitmapist/events'):
-        assert request.endpoint == 'bitmapist.events'
+def test_cohort(app, bitmap, client):
+    with app.test_request_context('/bitmapist/cohort'):
+        assert request.endpoint == 'bitmapist.cohort'
 
 
 def test_mark_decorator(app, client):

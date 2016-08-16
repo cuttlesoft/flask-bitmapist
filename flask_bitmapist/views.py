@@ -46,26 +46,6 @@ def index():
     return render_template('bitmapist/index.html', events=get_event_names(), day_events=day_events, week_events=week_events, month_events=month_events, year_events=year_events)
 
 
-@bitmapist_bp.route('/events')
-def events():
-    now = datetime.utcnow()
-    event_names = get_event_names()
-
-    # For temporary listing of totals per event
-    events = {}
-    for event_name in event_names:
-        # TODO: + hourly
-        day = len(DayEvents(event_name, now.year, now.month, now.day))
-        week = len(WeekEvents(event_name, now.year, now.isocalendar()[1]))
-        month = len(MonthEvents(event_name, now.year, now.month))
-        year = len(YearEvents(event_name, now.year))
-        event = (year, month, week, day)
-        events[event_name] = event
-
-    intervals = ['year', 'month', 'week', 'day']
-    return render_template('bitmapist/events.html', event_names=event_names, intervals=intervals, events=events)
-
-
 @bitmapist_bp.route('/cohort', methods=['GET', 'POST'])
 def cohort():
     if request.method == 'GET':
