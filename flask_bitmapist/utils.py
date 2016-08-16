@@ -39,39 +39,27 @@ def _events_fn(time_group='days'):
         return _year_events_fn
 
 
-def get_cohort(primary, secondary, additional=[], time_group='days',
-               num_rows=10, num_cols=10, as_percent=True,
-               system='default'):
+def get_cohort(primary_event_name, secondary_event_name,
+               additional_events=[], time_group='days',
+               num_rows=10, num_cols=10, system='default'):
     """
     Fetch the data from bitmapist for the cohort.
-    :param :primary Name of primary event for defining cohort
-    :param :secondary Name of secondary event for defining cohort
-    :param :additional List of additional event names by which to filter cohort
+    :param :primary_event_name Name of primary event for defining cohort
+    :param :secondary_event_name Name of secondary event for defining cohort
+    :param :additional_events List of additional event names + operations by which to filter cohort
     :param :time_group Time scale by which to group results; can be `days`, `weeks`, `months`, `years`
     :param :num_rows How many results rows to get; corresponds to how far back to get results from current time
     :param :num_cols How many results cols to get; corresponds to how far forward to get results from each time point
-    :param :as_percent Whether to calculate and show percents
     :param :system Which bitmapist should be used
-    :return A list of lists, not unlike a matrix, containing the cohort results
-    # :return A list of day data, formated like `[[datetime, total, event counts...], ...]`
-    # :return Dict with four lists (with matching indices); time point dates, time point totals, time point averages, and cohort data
+    :return Tuple of list of lists - not unlike a matrix - containing the cohort results, list of dates for determining cohort
     """
 
     cohort = []
     dates = []
-    row_totals = []  # totals for each row
-    col_totals = []  # totals for each col; sum through loops, used for averages
-    # averages = []
 
     fn_get_events = _events_fn(time_group)
 
     # TIMES
-
-    if time_group == 'years':
-        # Three shall be the number thou shalt count, and the number of the
-        # counting shall be three. Four shalt thou not count, neither count thou
-        # two, excepting that thou then proceed to three. Five is right out.
-        num_rows = 3
 
     event_time = datetime.utcnow() - relativedelta(**{ time_group: num_rows - 1 })  # WHY - 1 # maybe counting deltas between time points?
     increment_delta = lambda t: relativedelta(**{ time_group: t })
@@ -84,29 +72,29 @@ def get_cohort(primary, secondary, additional=[], time_group='days',
     for i in range(num_rows):
         # get results for each date interval from current time point for the row
         row = []
-        primary_events = fn_get_events(primary, event_time, system)
-        primary_total = len(primary_events)
+        primary_event = fn_get_events(primary_event_name, event_time, system)
+        primary_total = len(primary_event)
 
         dates.append(event_time)
-        row_totals.append(primary_total)
 
-        if not len(primary_events):
-            row = [''] * cols
+        if not len(primary_event):
+            row = [''] * num_cols
             continue
 
         for j in range(num_cols):
             # get results for each event chain for current incremented time
             incremented = event_time + increment_delta(j)
 
-            chained_events = chain_events(secondary, additional,
+            chained_events = chain_events(secondary_event_name,
+                                          additional_events,
                                           incremented, time_group, system)
 
-            combined_events = BitOpAnd(primary_events, chained_events,
-                                      'and', system)
+            if chained_events:
+                combined_events = BitOpAnd(chained_events, primary_event)
+                combined_total = len(combined_events)
+            else:
+                combined_total = ''
 
-            combined_total = len(combined_events)
-            # if as_percent:
-            #     combined_total = float(combined_total) / primary_total * 100
 
             row.append(combined_total)
 
@@ -119,52 +107,59 @@ def get_cohort(primary, secondary, additional=[], time_group='days',
     return cohort, dates
 
 
-def chain_events(base, additional, time_pt, time_group, system='default'):
+def chain_events(base_event_name, events_to_chain, time_point, time_group,
+                 system='default'):
     """
     Chain additional events with base set of events
-    :param :base Name of event to chain additional events to/with
-    :param :additional_events List of additional event names to chain
-    :param :time_pt Point in time at which to get events (i.e., `now` argument)
+    :param :base_event_name Name of event to chain additional events to/with
+    :param :events_to_chain List of additional event names to chain
+    :param :time_point Point in time at which to get events (i.e., `now` argument)
     :param :time_group Time scale by which to group results; can be `days`, `weeks`, `months`, `years`
     :param :system Which bitmapist should be used
     :return
     """
 
     fn_get_events = _events_fn(time_group)
-    base_events = fn_get_events(base, time_pt, system)
+    base_event = fn_get_events(base_event_name, time_point, system)
 
-    if not base_events.has_events_marked():
+    if not base_event.has_events_marked():
         return ''
 
-    if additional:
-        for idx, additional_event in enumerate(additional):
-            event_name = additional_event.get('name')
-            bitmapist_events = fn_get_events(event_name, time_pt, system)
-            additional[idx]['events'] = bitmapist_events
+    if events_to_chain:
+        chain_events = []
+
+        # for idx, event_to_chain in enumerate(events_to_chain):
+        for event_to_chain in events_to_chain:
+            event_name = event_to_chain.get('name')
+            chain_event = fn_get_events(event_name, time_point, system)
+            chain_events.append(chain_event)
 
         # Each OR should operate only on its immediate predecessor, e.g.,
         #     `A && B && C || D` should be handled as ~ `A && B && (C || D)`,
         #     and
         #     `A && B || C && D` should be handled as ~ `A && (B || C) && D`.
-        or_event_indices = [idx for idx, e in enumerate(additional) if e['op'] == 'or']
+        op_or_indices = [idx for idx, e in enumerate(events_to_chain) if e['op'] == 'or']
 
-        for idx in reversed(or_event_indices):
-            # If first event, OR will operate on base event as normal
+        # Work backwards; least impact on operator combos + list indexing
+        for idx in reversed(op_or_indices):
+            # If first of events to chain, OR will just operate on base event
             if idx > 0:
-                prev_event = additional[idx - 1].get('events')
-                or_event = additional.pop(idx).get('events')
+                prev_event = chain_events[idx - 1]
+                or_event = chain_events.pop(idx)
 
-                combined_events = BitOpOr(system, prev_event, or_event)
-                additional[idx - 1]['events'] = combined_events
+                # OR events should not be re-chained below
+                events_to_chain.pop(idx)
 
-        for additional_event in additional:
-            events = additional_event.get('events')
-            if additional_event.get('op') == 'or':
-                base_events = BitOpOr(system, base_events, events)
+                chain_events[idx - 1] = BitOpOr(prev_event, or_event)
+
+
+        for idx, name_and_op in enumerate(events_to_chain):
+            if name_and_op.get('op') == 'or':
+                base_event = BitOpOr(base_event, chain_events[idx])
             else:
-                base_events = BitOpAnd(system, base_events, events)
+                base_event = BitOpAnd(base_event, chain_events[idx])
 
-    return base_events
+    return base_event
 
 
 # PRIVATE methods: copied directly from Bitmapist because you can't import
