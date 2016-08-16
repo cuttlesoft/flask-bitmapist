@@ -1,60 +1,60 @@
 <div class="table-responsive">
-    <table class="cohort-heatmap table table-bordered" cellpadding="0" cellspacing="0">
-        <thead>
-            <tr>
-                <th class="date"></th>
-                <th class="total-count">Total</th>
+  <table class="cohort-heatmap table table-bordered" cellpadding="0" cellspacing="0">
+    <thead>
+      <tr>
+        <th class="date"></th>
+        <th class="total-count">Total</th>
 
-                {% for date in dates[:num_cols] %}
-                <th class="entry">{{ date }}</th>
-                <!-- <th class="entry">+{# n #} {# time_group #}(s)</th> -->
-                {% endfor %}
-            </tr>
-        </thead>
+        {% for date in dates[:num_cols] %}
+          <th class="entry">{{ date }}</th>
+          <!-- <th class="entry">+{# n #} {# time_group #}(s)</th> -->
+        {% endfor %}
+      </tr>
+    </thead>
 
-        <tbody>
-            {% for cohort_row in cohort[:num_rows] %}
-                {% set idx = loop.index0 %}
-                <tr>
-                    <td class="date">{{ dates[idx] }}</td>
+    <tbody>
+      {% for cohort_row in cohort[:num_rows] %}
+        {% set idx = loop.index0 %}
 
-                    <td class="total-count">
-                        {{ totals[idx] }}
-                    </td>
+        <tr>
+          <td class="date">{{ dates[idx] }}</td>
+          <td class="total-count">{{ totals[idx] }}</td>
+          {% for i in range(num_cols) %}
+            {% set value = cohort_row[i] or '' %}
 
-                    {% for i in range(num_cols) %}
-                        {% set value = cohort_row[i] or '' %}
-                        {% if value %}
-                            {% set percent = value if as_percent else (value / totals[idx])|float %}
-                        {% else %}
-                            {% set percent = 0 %}
-                        {% endif %}
+            {% if value %}
+              {% set percent = value if as_percent else (value / totals[idx])|float %}
+            {% else %}
+              {% set percent = 0 %}
+            {% endif %}
 
-                        <td style="background-color: hsla(189, 80%, 48%, {{ percent|float|round(1) }}); color: hsla(0, 0%, 0%, {{ (percent|float + 0.25)|round(1) }});">
-                            {% if as_percent and value != '' %}
-                              {{ (value * 100)|round(2) }}%
-                            {% else %}
-                              {{ value }}
-                            {% endif %}
+            <td style="background-color: hsla(189, 80%, 48%, {{ percent|float|round(1) }}); color: hsla(0, 0%, 0%, {{ (percent|float + 0.25)|round(1) }});">
+              {% if as_percent and value != '' %}
+                {{ (value * 100)|round(2) }}%
+              {% else %}
+                {{ value }}
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
 
-                        </td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
+      {% endfor %}
 
-            <tr class="averages">
-                <td><strong>Average</strong></td>
-                <td>{{ average_total|int }}</td>
-                {% for average in averages %}
-                <td>
-                    {% if as_percent %}
-                        {{ (average * 100)|round(2) }}%
-                    {% else %}
-                        {{ average|int }}
-                    {% endif %}
-                </td>
-                {% endfor %}
-            </tr>
-        </tbody>
-    </table>
+      <tr class="averages">
+        <td><strong>Average</strong></td>
+        <td>{{ average_total|int }}</td>
+
+        {% for average in averages %}
+          <td>
+            {% if as_percent %}
+              {{ (average * 100)|round(2) }}%
+            {% else %}
+              {{ average|int }}
+            {% endif %}
+          </td>
+        {% endfor %}
+
+      </tr>
+    </tbody>
+  </table>
 </div>
