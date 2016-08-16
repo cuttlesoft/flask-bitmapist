@@ -102,7 +102,7 @@ def cohort():
         num_cols = num_rows if num_cols > num_rows else num_cols
 
         # Get cohort data and associated dates
-        cohort, dates = get_cohort(primary_event, secondary_event,
+        cohort, dates, row_totals = get_cohort(primary_event, secondary_event,
                                    additional_events=additional_events,
                                    time_group=time_group,
                                    num_rows=num_rows,
@@ -121,13 +121,13 @@ def cohort():
         date_strings = [dt.strftime(dt_format) for dt in dates]
 
         # Get row totals for table and column totals for averages
-        row_totals = [0] * num_rows
+        # row_totals = [0] * num_rows
         col_totals = [0] * num_cols
         col_counts = [0] * num_cols
         for i, row in enumerate(cohort):
             for j, val in enumerate(row):
                 if val:
-                    row_totals[i] += val
+                    # row_totals[i] += val
                     col_totals[j] += val
                     col_counts[j] += 1  # exclude non-zero empties from averages
 
@@ -142,14 +142,14 @@ def cohort():
                 cohort[i] = percent_row
 
         # Get averages for table
+        average_total = sum(row_totals) / len(row_totals)
         averages = []
         for idx, col_total in enumerate(col_totals):
             col_count = col_counts[idx]
             average = float(col_total) / col_count if col_count else 0
             if as_percent:
-                average = average / 100
+                average = average / average_total
             averages.append(average)
-        average_total = sum(row_totals) / len(row_totals)
 
         # Heatmap!
         return render_template('bitmapist/_heatmap.html',

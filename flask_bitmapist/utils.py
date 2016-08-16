@@ -56,6 +56,7 @@ def get_cohort(primary_event_name, secondary_event_name,
 
     cohort = []
     dates = []
+    primary_event_totals = []  # for percents
 
     fn_get_events = _events_fn(time_group)
 
@@ -73,11 +74,13 @@ def get_cohort(primary_event_name, secondary_event_name,
         # get results for each date interval from current time point for the row
         row = []
         primary_event = fn_get_events(primary_event_name, event_time, system)
+
         primary_total = len(primary_event)
+        primary_event_totals.append(primary_total)
 
         dates.append(event_time)
 
-        if not len(primary_event):
+        if not primary_total:
             row = [''] * num_cols
             continue
 
@@ -104,7 +107,7 @@ def get_cohort(primary_event_name, secondary_event_name,
     # Clean up results of BitOps
     delete_runtime_bitop_keys()
 
-    return cohort, dates
+    return cohort, dates, primary_event_totals
 
 
 def chain_events(base_event_name, events_to_chain, time_point, time_group,
