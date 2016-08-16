@@ -1,64 +1,60 @@
 <div class="table-responsive">
-    <table class="cohort-heatmap table table-bordered" cellpadding="0" cellspacing="0">
-        <thead>
-            <tr>
-                <th class="date"></th>
-                <th class="total-count">Total</th>
+  <table class="cohort-heatmap table table-bordered" cellpadding="0" cellspacing="0">
+    <thead>
+      <tr>
+        <th class="date"></th>
+        <th class="total-count">Total</th>
 
-                {% for i in range(0, num_of_rows + 1) %}
-                <th class="entry">{{ i }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
+        {% for date in dates[:num_cols] %}
+          <th class="entry">{{ date }}</th>
+          <!-- <th class="entry">+{# n #} {# time_group #}(s)</th> -->
+        {% endfor %}
+      </tr>
+    </thead>
 
-        <tbody>
-            {% for row_data in dates_data %}
-            <tr>
-                <td class="date">
-                    {% if time_group == 'years' %}
-                        {{ row_data[0].strftime('%Y') }}
-                    {% elif time_group == 'months' %}
-                        {{ row_data[0].strftime('%b %Y') }}
-                    {% elif time_group == 'weeks' %}
-                        {{ row_data[0].strftime('Week %U - %d %b %Y') }}
-                    {% else %}
-                        {{ row_data[0].strftime('%d %b %Y') }}
-                    {% endif %}
-                </td>
+    <tbody>
+      {% for i in range(num_rows) %}
+        {% set cohort_row = cohort[i] or [] %}
 
-                <td class="total-count">
-                    {{ row_data[1] }}
-                </td>
+        <tr>
+          <td class="date">{{ dates[i] }}</td>
+          <td class="total-count">{{ totals[i] }}</td>
+          {% for j in range(num_cols) %}
+            {% set value = cohort_row[j] or '' %}
 
-                {% for i in range(2, num_of_rows + 3) %}
-                    {% set percent = row_data[i] or 0 %}
+            {% if value %}
+              {% set percent = value if as_percent else (value / totals[i])|float %}
+            {% else %}
+              {% set percent = 0 %}
+            {% endif %}
 
-                    <td style="background-color: hsla(189, 80%, 48%, {{ (percent/100)|float|round(1) }}); color: hsla(0, 0%, 0%, {{ ((percent/100)|float + 0.25)|round(1) }});">
-                        {% if percent != '' %}
-                            {% if as_percent %}
-                              {{ percent|round(2) }}%
-                            {% else %}
-                              {{ percent|int }}
-                            {% endif %}
-                        {% endif %}
-                    </td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
+            <td style="background-color: hsla(189, 80%, 48%, {{ percent|float|round(1) }}); color: hsla(0, 0%, 0%, {{ (percent|float + 0.25)|round(1) }});">
+              {% if as_percent and value != '' %}
+                {{ (value * 100)|round(2) }}%
+              {% else %}
+                {{ value }}
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
 
-            <tr class="averages">
-                <td><strong>Average</strong></td>
-                <td>{{ averages[1] }}</td>
-                {% for avg in averages[2:] %}
-                <td>
-                    {% if as_percent %}
-                        {{ avg|round(2) }}%
-                    {% else %}
-                        {{ avg|int }}
-                    {% endif %}
-                </td>
-                {% endfor %}
-            </tr>
-        </tbody>
-    </table>
+      {% endfor %}
+
+      <tr class="averages">
+        <td><strong>Average</strong></td>
+        <td>{{ average_total|int }}</td>
+
+        {% for average in averages %}
+          <td>
+            {% if as_percent %}
+              {{ (average * 100)|round(2) }}%
+            {% else %}
+              {{ average|int }}
+            {% endif %}
+          </td>
+        {% endfor %}
+
+      </tr>
+    </tbody>
+  </table>
 </div>
