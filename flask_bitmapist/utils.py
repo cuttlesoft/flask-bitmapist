@@ -51,7 +51,7 @@ def get_cohort(primary_event_name, secondary_event_name,
     :param :num_rows How many results rows to get; corresponds to how far back to get results from current time
     :param :num_cols How many results cols to get; corresponds to how far forward to get results from each time point
     :param :system Which bitmapist should be used
-    :return Tuple of list of lists - not unlike a matrix - containing the cohort results, list of dates for determining cohort
+    :return Tuple of (list of lists of cohort results, list of dates for cohort)
     """
 
     cohort = []
@@ -61,11 +61,11 @@ def get_cohort(primary_event_name, secondary_event_name,
 
     # TIMES
 
-    event_time = datetime.utcnow() - relativedelta(**{ time_group: num_rows - 1 })  # WHY - 1 # maybe counting deltas between time points?
+    event_time = datetime.utcnow() - relativedelta(**{ time_group: num_rows - 1 })  # - 1 for deltas between time points (?)
     increment_delta = lambda t: relativedelta(**{ time_group: t })
 
     if time_group == 'months':
-        event_time -= relativedelta(days=event_time.day - 1) # WHY
+        event_time -= relativedelta(days=event_time.day - 1)  # (?)
 
     # COHORT
 

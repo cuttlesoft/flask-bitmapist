@@ -51,84 +51,133 @@ table.cohort-heatmap tr.averages td {
 {% endblock %}
 
 {% block content %}
-  <h1>Cohort</h1>
+<h1>Cohort</h1>
 
-  <div id="cohort" class="form-horizontal">
-    <div class="form-group">
-      <span class="col-md-2 col-xs-3 control-label">
-        Of those users who
-      </span>
+<div id="cohort" class="form-horizontal">
+  <div class="row">
+    <div id="cohort-events" class="col-md-6 col-xs-12">
 
-      <div class="col-md-2 col-xs-4">
-        <select name="main-event" class="form-control">
-          <!-- <option selected disabled>did something</option> -->
-          <option selected disabled>...</option>
-          {% for name, value in event_options %}
-          <option value="{{ value }}">{{ name }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-
-
-    <div id="events">
-      <div class="form-group event">
-        <span class="col-md-2 col-xs-3 control-label">
-          <span class="additional-label">see how many also</span>
+      <div class="form-group">
+        <span class="col-md-4 col-xs-3 control-label">
+          Of those users who
         </span>
 
-        <div class="col-md-2 col-xs-4">
-          <select name="event-name" class="form-control">
-            <!-- <option selected disabled>did something else</option> -->
+        <div class="col-md-4 col-xs-4">
+          <select name="main-event" class="form-control">
+            <!-- <option selected disabled>did something</option> -->
             <option selected disabled>...</option>
             {% for name, value in event_options %}
             <option value="{{ value }}">{{ name }}</option>
             {% endfor %}
           </select>
         </div>
+      </div>
 
-        <div class="col-md-1 col-xs-2">
-          <select name="event-op" class="form-control event-op">
-            {% for op in ['and', 'or'] %}
-            <option value="{{ op }}">{{ op.upper() }}</option>
+
+      <div id="events">
+        <div class="form-group event">
+          <span class="col-md-4 col-xs-3 control-label">
+            <span class="additional-label">see how many also</span>
+          </span>
+
+          <div class="col-md-4 col-xs-4">
+            <select name="event-name" class="form-control">
+              <!-- <option selected disabled>did something else</option> -->
+              <option selected disabled>...</option>
+              {% for name, value in event_options %}
+              <option value="{{ value }}">{{ name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-2 col-xs-2">
+            <select name="event-op" class="form-control event-op">
+              {% for op in ['and', 'or'] %}
+              <option value="{{ op }}">{{ op.upper() }}</option>
+              {% endfor %}
+            </select>
+
+            <button class="event-add btn btn-xs btn-gray">
+              <span class="glyphicon glyphicon-plus"><span class="sr-only">Add</span></span>
+            </button>
+
+            <button class="event-remove btn btn-xs btn-warning">
+              <span class="glyphicon glyphicon-minus"><span class="sr-only">remove condition</span></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <span class="col-md-4 col-xs-3 control-label">
+          each
+        </span>
+
+        <div class="col-md-4 col-xs-4">
+          <select name="time-group" class="form-control">
+            {% for time_group in time_groups %}
+            <option value="{{ time_group }}s">{{ time_group }}</option>
             {% endfor %}
           </select>
+          <!--
+          since
+          <select name="start-date"></select>
+          -->
+        </div>
+      </div>
 
-          <button class="event-add btn btn-xs btn-gray">
-            <span class="glyphicon glyphicon-plus"><span class="sr-only">Add</span></span>
-          </button>
 
-          <button class="event-remove btn btn-xs btn-warning">
-            <span class="glyphicon glyphicon-minus"><span class="sr-only">remove condition</span></span>
+      <div class="form-group">
+        <div class="col-md-4 col-md-offset-4 col-xs-4 col-xs-offset-3">
+          <button id="generate" class="btn btn-success">
+            CHECK IT <span class="glyphicon glyphicon-ok"><span class="sr-only">Go</span></span>
           </button>
         </div>
       </div>
+
     </div>
 
-    <div class="form-group">
-      <span class="col-md-2 col-xs-3 control-label">
-        each
-      </span>
+    <div id="cohort-settings" class="col-md-6 col-xs-12">
 
-      <div class="col-md-2 col-xs-4">
-        <select name="time-group" class="form-control">
-          {% for time_group in time_groups %}
-          <option value="{{ time_group }}s">{{ time_group }}</option>
-          {% endfor %}
-        </select>
-        <!--
-        since
-        <select name="start-date"></select>
-        -->
+      <div class="form-group">
+        <span class="col-md-4 col-xs-3 control-label">
+          Get results starting
+        </span>
+
+        <div class="col-md-4 col-xs-4">
+          <select name="num-rows" class="form-control">
+            {% for r in range(1, 25) %}
+            <option value="{{ r }}" {{ 'selected' if r == 10 }}>{{ r }}</option>
+            {% endfor %}
+          </select>
+          <span class="time-group-label">days</span> ago
+        </div>
       </div>
-    </div>
 
+      <div class="form-group">
+        <span class="col-md-4 col-xs-3 control-label">
+          and going forward
+        </span>
 
-    <div class="form-group">
-      <div class="col-md-2 col-md-offset-2 col-xs-4 col-xs-offset-3">
-        <button id="go" class="btn btn-success">
-          CHECK IT <span class="glyphicon glyphicon-ok"><span class="sr-only">Go</span></span>
-        </button>
+        <div class="col-md-4 col-xs-4">
+          <select name="num-cols" class="form-control">
+            {% for r in range(1, 25) %}
+            <option value="{{ r }}" {{ 'selected' if r == 10 }}>{{ r }}</option>
+            {% endfor %}
+          </select>
+          <span class="time-group-label">days</span> from there
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-md-8 col-xs-8">
+              <div class="checkbox">
+                <label for="as-percent" class="pull-right">
+                  <input type="checkbox" name="as-percent" id="as-percent"> Display results as percents
+                </label>
+              </div>
+            </div>
+          </div>
       </div>
     </div>
   </div>
@@ -137,7 +186,7 @@ table.cohort-heatmap tr.averages td {
 
   <div id="cohort-heatmap"></div>
 
-  {% for e, event_name in event_options %}
+  <!-- {% for e, event_name in event_options %}
     <div id="{{ event_name }}" class="event-name">
       <h1><small>{{ event_name }}</small></h1>
       <span class="event-time day">Past Day: {{ events[event_name][3] }}</span>
@@ -145,8 +194,8 @@ table.cohort-heatmap tr.averages td {
       <span class="event-time month">Past Month: {{ events[event_name][1] }}</span>
       <span class="event-time year">Past Year: {{ events[event_name][0] }}</span>
     </div>
-  {% endfor %}
-
+  {% endfor %} -->
+</div>
 
 {% endblock %}
 
@@ -154,16 +203,16 @@ table.cohort-heatmap tr.averages td {
 <script>
 
   // meh.
-  function toggleGo() {
+  function toggleSubmit() {
     // (visually) disable go button if required fields missing
     var one = $('select[name=main-event]').val();
     var two = $('select[name=event-name]:first-of-type').val();
     var tim = $('select[name=time-group]').val();
 
     if (one && two && tim) {
-      $('#go').removeClass('disabled');
+      $('#generate').removeClass('disabled');
     } else {
-      $('#go').addClass('disabled');
+      $('#generate').addClass('disabled');
     }
   }
 
@@ -182,13 +231,39 @@ table.cohort-heatmap tr.averages td {
     // only first event has label
     $('.event:not(:first-of-type) .additional-label').hide();
 
-    toggleGo();
+    toggleSubmit();
+  }
+
+  function toggleNumColOptions(max) {
+    $('select[name=num-cols] option').each(function(index) {
+      if (parseInt($(this).val()) > max) {
+        $(this).hide();
+      } else {
+        $(this).show();
+      }
+    });
   }
 
   // some things get some buttons
   toggleEventControls();
+  // max num cols at current num rows
+  toggleNumColOptions(10);
 
-  $('select').on('change', toggleGo);
+  $('select').on('change', toggleSubmit);
+
+  // update labels based on selected time group
+  $('select[name=time-group]').on('change', function() {
+    $('.time-group-label').text($(this).val());
+  });
+
+  // update num-cols options based on selected num-rows option
+  $('select[name=num-rows]').on('change', function() {
+    var numRows = parseInt($(this).val());
+    if (parseInt($('select[name=num-cols]').val()) > numRows) {
+      $('select[name=num-cols]').val(numRows);
+    }
+    toggleNumColOptions(numRows);
+  });
 
   // add event
   $('#events').on('click', '.event-add', function() {
@@ -203,30 +278,23 @@ table.cohort-heatmap tr.averages td {
   });
 
   // generate cohort heatmap
-  $('#go').on('click', function() {
-
-    // format the data
-    // submit the data
-    // AJAX + response
-    // lines lining up
-    // draw chart etc.
-
-    //////////////////
+  $('#generate').on('click', function() {
 
     // format the data
 
     var cohort = {
-      'time_group': $('select[name=time-group]').val(),
       'primary_event': $('select[name=main-event]').val(),
       'secondary_event': $('select[name=event-name]:first-of-type').val(),
-      'additional_events': []
+      'additional_events': [],
+      'time_group': $('select[name=time-group]').val(),
+      'num_rows': $('select[name=num-rows]').val(),
+      'num_cols': $('select[name=num-cols]').val(),
+      'as_percent': $('input[name=as-percent]').is(':checked')
     };
 
     var additionalEvents = $('.event:not(:first-of-type)');
     if (additionalEvents) {
       additionalEvents.each(function(index) {
-        // console.log($(this).prev('.event').find('select[name=event-op]').val(),
-        //             $(this).find('select[name=event-name]').val());
         var name = $(this).find('select[name=event-name]').val();
         var op = $(this).prev('.event').find('select[name=event-op]').val() || 'and';
         if (name) {
@@ -234,7 +302,6 @@ table.cohort-heatmap tr.averages td {
         }
       });
     }
-
     console.log(cohort);
 
     // submit the data

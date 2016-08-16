@@ -102,20 +102,15 @@ def cohort():
     elif request.method == 'POST':
         data = json.loads(request.data)
 
-        time_group = data.get('time_group', 'days')
+        # Cohort events
         primary_event = data.get('primary_event')
         secondary_event = data.get('secondary_event')
         additional_events = data.get('additional_events', [])
-
-        # if additional_events:
-        #     for additional_event in additional_events:
-        #         event_filters.append(additional_event.get('name'))
-
-        # TEMPORARY
-        as_percent = True
-        num_rows = 10
-        num_cols = 10
-        # END TEMP
+        # Cohort settings
+        time_group = data.get('time_group', 'days')
+        as_percent = data.get('as_percent', True)
+        num_rows = int(data.get('num_rows', 20))
+        num_cols = int(data.get('num_cols', 10))
 
         if time_group == 'years':
             # Three shall be the number thou shalt count, and the number of the
@@ -123,23 +118,17 @@ def cohort():
             # two, excepting that thou then proceed to three. Five is right out.
             num_rows = 3
 
-        # Columns > rows would extend into future and thus just be empty
+        # Columns > rows would extend into future and thus would just be empty
         num_cols = num_rows if num_cols > num_rows else num_cols
 
-        # TODO: this?
-        # cohort_dates = get_cohort_dates(time_group, num_rows, num_cols)
-        # cohort_data = get_cohort(primary, secondary, additional, cohort_dates)
+        # Get cohort data and associated dates
         cohort, dates = get_cohort(primary_event, secondary_event,
                                    additional_events=additional_events,
                                    time_group=time_group,
-                                   # as_percent=as_percent,
                                    num_rows=num_rows,
                                    num_cols=num_cols)
 
-
-        # HTML/table/format-related things, including totals/averages/etc.
-
-        # Date formatting
+        # Format dates for table
         if time_group == 'years':
             dt_format = '%Y'
         elif time_group == 'months':
@@ -151,7 +140,7 @@ def cohort():
 
         date_strings = [dt.strftime(dt_format) for dt in dates]
 
-        # Row/column totals
+        # Get row totals for table and column totals for averages
         row_totals = [0] * num_rows
         col_totals = [0] * num_cols
         col_counts = [0] * num_cols
@@ -162,11 +151,17 @@ def cohort():
                     col_totals[j] += val
                     col_counts[j] += 1  # exclude non-zero empties from averages
 
+            if as_percent and row_totals[i]:
+                # cohort[i] = [float(r) / row_totals[i] for r in row]
+                percent_row = []
+                for r in row:
+                    if r != '':
+                        percent_row.append(float(r) / row_totals[i])
+                    else:
+                        percent_row.append(r)
+                cohort[i] = percent_row
 
-            if as_percent:
-                cohort[i] = [float(r) / row_totals[i] for r in row if r != '']
-
-        # Averages
+        # Get averages for table
         averages = []
         for idx, col_total in enumerate(col_totals):
             col_count = col_counts[idx]
@@ -176,6 +171,7 @@ def cohort():
             averages.append(average)
         average_total = sum(row_totals) / len(row_totals)
 
+        # Heatmap!
         return render_template('bitmapist/_heatmap.html',
                        cohort=cohort,
                        dates=date_strings,
