@@ -13,17 +13,17 @@
     </thead>
 
     <tbody>
-      {% for cohort_row in cohort[:num_rows] %}
-        {% set idx = loop.index0 %}
+      {% for i in range(num_rows) %}
+        {% set cohort_row = cohort[i] or [] %}
 
         <tr>
-          <td class="date">{{ dates[idx] }}</td>
-          <td class="total-count">{{ totals[idx] }}</td>
-          {% for i in range(num_cols) %}
-            {% set value = cohort_row[i] or '' %}
+          <td class="date">{{ dates[i] }}</td>
+          <td class="total-count">{{ totals[i] }}</td>
+          {% for j in range(num_cols) %}
+            {% set value = cohort_row[j] or '' %}
 
             {% if value %}
-              {% set percent = value if as_percent else (value / totals[idx])|float %}
+              {% set percent = value if as_percent else (value / totals[i])|float %}
             {% else %}
               {% set percent = 0 %}
             {% endif %}
