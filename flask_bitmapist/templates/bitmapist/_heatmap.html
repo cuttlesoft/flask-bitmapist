@@ -3,7 +3,7 @@
     <thead>
       <tr>
         <th class="date"></th>
-        <th class="total-count">Total</th>
+        <th class="total-count">Total ({{ total|int }})</th>
 
         {% for date in dates[:num_cols] %}
           <th class="entry">{{ date }}</th>
@@ -20,7 +20,7 @@
           <td class="date">{{ dates[i] }}</td>
           <td class="total-count">{{ totals[i] }}</td>
           {% for j in range(num_cols) %}
-            {% set value = cohort_row[j] or '' %}
+            {% set value = cohort_row[j] if cohort_row[j] != None else '' %}
 
             {% if value %}
               {% set percent = value if as_percent else (value / totals[i])|float %}
@@ -42,7 +42,7 @@
 
       <tr class="averages">
         <td><strong>Average</strong></td>
-        <td>{{ average_total|int }}</td>
+        <td>{{ (total / (totals|length))|int }}</td>
 
         {% for average in averages %}
           <td>

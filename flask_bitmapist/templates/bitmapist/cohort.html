@@ -307,6 +307,7 @@ table.cohort-heatmap tr.averages td {
     // submit the data
 
     $.ajax({
+      // url: "{{ url_for('.cohort') }}?json=true",
       url: "{{ url_for('.cohort') }}",
       method: 'POST', // >= v1.9.0+
       // type: 'POST', // < v1.9.0

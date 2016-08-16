@@ -81,7 +81,7 @@ def get_cohort(primary_event_name, secondary_event_name,
         dates.append(event_time)
 
         if not primary_total:
-            row = [''] * num_cols
+            row = [None] * num_cols
             continue
 
         for j in range(num_cols):
@@ -96,7 +96,7 @@ def get_cohort(primary_event_name, secondary_event_name,
                 combined_events = BitOpAnd(chained_events, primary_event)
                 combined_total = len(combined_events)
             else:
-                combined_total = ''
+                combined_total = None
 
 
             row.append(combined_total)
