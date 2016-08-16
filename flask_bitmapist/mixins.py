@@ -18,15 +18,15 @@ class Bitmapistable(object):
 
     @staticmethod
     def bitmapist_after_insert(mapper, connection, target):
-        mark_event('%s_inserted' % target.__class__.__name__.lower(), target.id)
+        mark_event('%s:created' % target.__class__.__name__.lower(), target.id)
 
     @staticmethod
     def bitmapist_before_update(mapper, connection, target):
-        mark_event('%s_updated' % target.__class__.__name__.lower(), target.id)
+        mark_event('%s:updated' % target.__class__.__name__.lower(), target.id)
 
     @staticmethod
     def bitmapist_before_delete(mapper, connection, target):
-        mark_event('%s_deleted' % target.__class__.__name__.lower(), target.id)
+        mark_event('%s:deleted' % target.__class__.__name__.lower(), target.id)
 
     @classmethod
     def __declare_last__(self):

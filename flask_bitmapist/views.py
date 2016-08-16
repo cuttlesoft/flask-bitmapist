@@ -38,10 +38,10 @@ def inject_version():
 def index():
     now = datetime.utcnow()
 
-    day_events = len(list(DayEvents('user_logged_in', now.year, now.month, now.day)))
-    week_events = len(list(WeekEvents('user_logged_in', now.year, now.isocalendar()[1])))
-    month_events = len(list(MonthEvents('user_logged_in', now.year, now.month)))
-    year_events = len(list(YearEvents('user_logged_in', now.year)))
+    day_events = len(list(DayEvents('user:logged_in', now.year, now.month, now.day)))
+    week_events = len(list(WeekEvents('user:logged_in', now.year, now.isocalendar()[1])))
+    month_events = len(list(MonthEvents('user:logged_in', now.year, now.month)))
+    year_events = len(list(YearEvents('user:logged_in', now.year)))
     # return render_template('bitmapist/data.html', ...
     return render_template('bitmapist/index.html', events=get_event_names(), day_events=day_events, week_events=week_events, month_events=month_events, year_events=year_events)
 
@@ -74,8 +74,8 @@ def cohort():
         # TEMPORARY? for display niceness
         event_options = []
         for event_name in event_names:
-            if 'user_' in event_name:
-                formatted = event_name.replace('user_', '').replace('_', ' ')
+            if 'user:' in event_name:
+                formatted = event_name.replace('user:', '').replace('_', ' ')
                 # such hackery
                 formatted = ('were ' + formatted).replace('were logged', 'logged')
                 # /hackery

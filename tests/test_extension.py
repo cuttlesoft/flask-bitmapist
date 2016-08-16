@@ -25,11 +25,11 @@ def setup_users(now=None):
 
     # mark specific events for single user with user_string as user_id
     event_mappings = {
-        'i': 'user_logged_in',
-        'o': 'user_logged_out',
-        'c': 'user_inserted',  # created
-        'u': 'user_updated',
-        'd': 'user_deleted',
+        'i': 'user:logged_in',
+        'o': 'user:logged_out',
+        'c': 'user:created',
+        'u': 'user:updated',
+        'd': 'user:deleted',
     }
 
     users = [
@@ -55,14 +55,14 @@ def setup_users(now=None):
 
 def setup_chain_events(time_group='days'):
     addons = {
-        'and_o': { 'name': 'user_logged_out', 'op': 'and' },
-        'and_c': { 'name': 'user_inserted',   'op': 'and' },
-        'and_u': { 'name': 'user_updated',    'op': 'and' },
-        'and_d': { 'name': 'user_deleted',    'op': 'and' },
-        'or_o':  { 'name': 'user_logged_out', 'op': 'or' },
-        'or_c':  { 'name': 'user_inserted',   'op': 'or' },
-        'or_u':  { 'name': 'user_updated',    'op': 'or' },
-        'or_d':  { 'name': 'user_deleted',    'op': 'or' }
+        'and_o': { 'name': 'user:logged_out', 'op': 'and' },
+        'and_c': { 'name': 'user:created',    'op': 'and' },
+        'and_u': { 'name': 'user:updated',    'op': 'and' },
+        'and_d': { 'name': 'user:deleted',    'op': 'and' },
+        'or_o':  { 'name': 'user:logged_out', 'op': 'or' },
+        'or_c':  { 'name': 'user:created',    'op': 'or' },
+        'or_u':  { 'name': 'user:updated',    'op': 'or' },
+        'or_d':  { 'name': 'user:deleted',    'op': 'or' }
     }
     return setup_users(), addons
 
@@ -76,18 +76,18 @@ def test_chain_events():
     users, addons = setup_chain_events(time_group)
 
     # test results from no additional events
-    logged_in_events = chain_events('user_logged_in', [], now, time_group)
+    logged_in_events = chain_events('user:logged_in', [], now, time_group)
 
-    # which users should have 'user_logged_in' events marked
+    # which users should have 'user:logged_in' events marked
     logged_in_users = [u for u in users if 'i' in u[0]]  # iocud/iocd/iou/icd/io
 
     assert len(logged_in_events) == len(logged_in_users)
     for u in logged_in_users:
-        assert u[1] in get_event_data('user_logged_in', time_group, now)
+        assert u[1] in get_event_data('user:logged_in', time_group, now)
 
 
 def test_chain_events_with_and():
-    base = 'user_logged_in'
+    base = 'user:logged_in'
     time_group = 'days'
     users, addons = setup_chain_events(time_group)
 
@@ -116,7 +116,7 @@ def test_chain_events_with_and():
 
 
 def test_chain_events_with_or():
-    base = 'user_logged_in'
+    base = 'user:logged_in'
     time_group = 'days'
     users, addons = setup_chain_events(time_group)
 
@@ -145,7 +145,7 @@ def test_chain_events_with_or():
 
 
 def test_chain_events_with_1_and_1_or():
-    base = 'user_logged_in'
+    base = 'user:logged_in'
     time_group = 'days'
     users, addons = setup_chain_events(time_group)
 
@@ -169,7 +169,7 @@ def test_chain_events_with_1_and_1_or():
 
 
 def test_chain_events_with_2_and_1_or():
-    base = 'user_logged_in'
+    base = 'user:logged_in'
     time_group = 'days'
     users, addons = setup_chain_events(time_group)
 
@@ -198,7 +198,7 @@ def test_chain_events_with_2_and_1_or():
 
 
 def test_chain_events_with_1_and_2_or():
-    base = 'user_logged_in'
+    base = 'user:logged_in'
     time_group = 'days'
     users, addons = setup_chain_events(time_group)
 
@@ -253,8 +253,8 @@ def test_flask_login_user_login(app):
         assert current_user.is_authenticated
         assert current_user == user
 
-        # test that user id was marked with 'user_logged_in' event
-        assert user_id in MonthEvents('user_logged_in', now.year, now.month)
+        # test that user id was marked with 'user:logged_in' event
+        assert user_id in MonthEvents('user:logged_in', now.year, now.month)
 
 
 def test_flask_login_user_logout(app):
@@ -275,8 +275,8 @@ def test_flask_login_user_logout(app):
         assert not current_user.is_authenticated
         assert not current_user == user
 
-        # test that user id was marked with 'user_logged_out' event
-        assert user_id in MonthEvents('user_logged_out', now.year, now.month)
+        # test that user id was marked with 'user:logged_out' event
+        assert user_id in MonthEvents('user:logged_out', now.year, now.month)
 
 
 # SQLALCHEMY
@@ -298,8 +298,8 @@ def test_sqlalchemy_after_insert(sqlalchemy):
         # test that user was saved
         assert user.id is not None
 
-        # test that user id was marked with 'user_inserted' event
-        assert user.id in MonthEvents('user_inserted', now.year, now.month)
+        # test that user id was marked with 'user:created' event
+        assert user.id in MonthEvents('user:created', now.year, now.month)
 
 
 def test_sqlalchemy_before_update(sqlalchemy):
@@ -319,8 +319,8 @@ def test_sqlalchemy_before_update(sqlalchemy):
         db.session.commit()
         assert not db.session.is_modified(user)
 
-        # test that user id was marked with 'user_updated' event
-        assert user.id in MonthEvents('user_updated', now.year, now.month)
+        # test that user id was marked with 'user:updated' event
+        assert user.id in MonthEvents('user:updated', now.year, now.month)
 
 
 def test_sqlalchemy_before_delete(sqlalchemy):
@@ -341,8 +341,8 @@ def test_sqlalchemy_before_delete(sqlalchemy):
         user_in_db = db.session.query(User).filter(User.id == user_id).first()
         assert not user_in_db
 
-        # test that user id was marked with 'user_deleted' event
-        assert user_id in MonthEvents('user_deleted', now.year, now.month)
+        # test that user id was marked with 'user:deleted' event
+        assert user_id in MonthEvents('user:deleted', now.year, now.month)
 
 
 # GENERAL (redis, decorator, marking events, etc.)

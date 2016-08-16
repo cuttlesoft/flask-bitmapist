@@ -2,7 +2,7 @@
 
 """ Seed redis database with 10,000 entries.
 
-Entries consist of random user id between 0-99, event of "user_logged_in",
+Entries consist of random user id between 0-99, user event,
 and timestamp between now and 3 years ago.
 
 Redis server must be running.
@@ -47,8 +47,8 @@ for _ in range(10000):
     rand_date = random_date(now, years_ago, random.random())
     user_id = randint(0, 99)
 
-    events = ['user_logged_in', 'user_logged_out',
-              'user_inserted', 'user_updated', 'user_deleted',
-              'note_inserted']
+    events = ['user:logged_in', 'user:logged_out',
+              'user:created', 'user:updated', 'user:deleted',
+              'note:inserted']
 
     mark_event(choice(events), user_id, now=rand_date)
