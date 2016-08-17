@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from datetime import datetime
+from datetime import datetime, timedelta
+import mock
 
 from flask import request
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
 
 from flask_bitmapist import (chain_events, get_cohort, get_event_data,
-                             mark, mark_event, unmark_event,
+                             mark, mark_event, unmark_event, BitOpAnd, BitOpOr,
                              MonthEvents, WeekEvents, DayEvents, HourEvents)
 from flask_bitmapist.extensions.flask_login import mark_login, mark_logout
 
@@ -67,8 +68,66 @@ def setup_chain_events(time_group='days'):
     return setup_users(), addons
 
 
-def test_get_cohort():
-    pass
+@mock.patch('flask_bitmapist.utils.BitOpAnd')
+@mock.patch('flask_bitmapist.utils.BitOpOr')
+@mock.patch('flask_bitmapist.utils.chain_events')
+@mock.patch('flask_bitmapist.utils.YearEvents')
+@mock.patch('flask_bitmapist.utils.MonthEvents')
+@mock.patch('flask_bitmapist.utils.WeekEvents')
+def test_get_cohort(mock_week_events, mock_month_events, mock_year_events,
+                    mock_chain_events, mock_bit_op_or, mock_bit_op_and):
+    # test cohort returns
+    from random import randint
+
+    # Generate list of ints to act as user ids;
+    # - between calls, should have some duplicate and some distinct
+    # - temporarily convert to a set to force unique list items
+    e = lambda: list(set([randint(1, 25) for n in range(10)]))
+    ee = lambda: [e() for n in range(100)]
+    mock_week_events.side_effect = ee()
+    mock_month_events.side_effect = ee()
+    mock_year_events.side_effect = ee()
+    mock_chain_events.side_effect = ee()
+
+    # Simulate BitOpAnd & BitOpOr returns but with lists
+    mock_bit_op_and.side_effect = lambda x, y: list(set(x) & set(y))
+    mock_bit_op_or.side_effect = lambda x, y: list(set(x) | set(y))
+
+    c1, d1, t1 = get_cohort('A', 'B', time_group='weeks', num_rows=4, num_cols=4)
+    c2, d2, t2 = get_cohort('A', 'B', time_group='months', num_rows=6, num_cols=5)
+    c3, d3, t3 = get_cohort('A', 'B', time_group='years', num_rows=2, num_cols=3)
+
+    # Assert cohort (+ date and total) lengths based on num_rows
+    assert len(c1) == 4
+    assert len(c1) == len(d1)
+    assert len(c1) == len(t1)
+    assert len(c2) == 6
+    assert len(c2) == len(d2)
+    assert len(c2) == len(t2)
+    assert len(c3) == 2
+    assert len(c3) == len(d3)
+    assert len(c3) == len(t3)
+    # Assert cohort row lengths based on num_cols
+    assert len(c1[0]) == 4
+    assert len(c2[0]) == 5
+    assert len(c3[0]) == 3
+
+    # Assert date values based on time_group given
+    #     - dates are old->new, so use num_rows-1 to adjust index for timedelta
+    _week = lambda x: (x.year, x.month, x.day, x.isocalendar()[1])
+    _month = lambda x: (x.year, x.month)
+    _year = lambda x: (x.year)
+    # 1 - weeks
+    for idx, d in enumerate(d1):
+        assert _week(d) == _week(now - timedelta(weeks=3-idx))
+    # 2 - months
+    for idx, d in enumerate(d2):
+        months_ago = (5 - idx) * 365 / 12  # no 'months' arg for timedelta
+        assert _month(d) == _month(now - timedelta(months_ago))
+    # 3 - years
+    for idx, d in enumerate(d3):
+        years_ago = (1 - idx) * 365  # no 'years' arg for timedelta
+        assert _year(d) == _year(now - timedelta(years_ago))
 
 
 def test_chain_events():

@@ -51,7 +51,7 @@ def get_cohort(primary_event_name, secondary_event_name,
     :param :num_rows How many results rows to get; corresponds to how far back to get results from current time
     :param :num_cols How many results cols to get; corresponds to how far forward to get results from each time point
     :param :system Which bitmapist should be used
-    :return Tuple of (list of lists of cohort results, list of dates for cohort)
+    :return Tuple of (list of lists of cohort results, list of dates for cohort, primary event total for each date)
     """
 
     cohort = []
@@ -97,7 +97,6 @@ def get_cohort(primary_event_name, secondary_event_name,
                 combined_total = len(combined_events)
             else:
                 combined_total = None
-
 
             row.append(combined_total)
 
