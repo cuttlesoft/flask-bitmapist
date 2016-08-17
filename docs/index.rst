@@ -115,8 +115,38 @@ and committed to the db::
 Flask Login
 ^^^^^^^^^^^
 
+A common form of user management with any Flask application is with the
+extension: Flask Login. This extension integrates with Flask Bitmapist to track
+login/logout events by just using the LoginManager and UserMixin::
+
+  from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
+
+  class User(UserMixin):
+      id = None
+
+  login_manager = LoginManager()
+  login_manager.init_app(app)
+
+Then create and login the user, and the event 'user:logged_in' will be registered::
+
+  # set up and log in user
+  user = User()
+  user.id = user_id
+  login_user(user)
+
+The same works for user logout::
+
+  logout_user(user)
+
 mark_event Function
 ^^^^^^^^^^^^^^^^^^^
+
+The most raw way to use Flask Bitmapist is to directly call ``mark_event()``::
+
+  from flask_bitmapist import mark_event
+
+  mark_event('event:completed', current_user.id)
+
 
 .
 .
