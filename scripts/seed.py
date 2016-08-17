@@ -45,7 +45,7 @@ def random_date(start, end, prop):
 
 for _ in range(10000):
     rand_date = random_date(now, years_ago, random.random())
-    user_id = randint(0, 99)
+    user_id = randint(0, 999)
 
     events = ['user:logged_in', 'user:logged_out',
               'user:created', 'user:updated', 'user:deleted',

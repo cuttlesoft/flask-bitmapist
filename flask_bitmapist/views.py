@@ -102,7 +102,7 @@ def cohort():
         num_cols = num_rows if num_cols > num_rows else num_cols
 
         # Get cohort data and associated dates
-        cohort, dates = get_cohort(primary_event, secondary_event,
+        cohort, dates, row_totals = get_cohort(primary_event, secondary_event,
                                    additional_events=additional_events,
                                    time_group=time_group,
                                    num_rows=num_rows,
@@ -120,46 +120,43 @@ def cohort():
 
         date_strings = [dt.strftime(dt_format) for dt in dates]
 
-        # Get row totals for table and column totals for averages
-        row_totals = [0] * num_rows
+        # Get column totals, averages, and percent values
         col_totals = [0] * num_cols
         col_counts = [0] * num_cols
         for i, row in enumerate(cohort):
             for j, val in enumerate(row):
-                if val:
-                    row_totals[i] += val
+                if val is not None:
                     col_totals[j] += val
                     col_counts[j] += 1  # exclude non-zero empties from averages
 
             if as_percent and row_totals[i]:
-                # cohort[i] = [float(r) / row_totals[i] for r in row]
-                percent_row = []
-                for r in row:
-                    if r != '':
-                        percent_row.append(float(r) / row_totals[i])
-                    else:
-                        percent_row.append(r)
-                cohort[i] = percent_row
+                cohort[i] = [float(r) / row_totals[i] if r is not None else r for r in row]
 
         # Get averages for table
+        overall_total = sum(row_totals)
         averages = []
         for idx, col_total in enumerate(col_totals):
-            col_count = col_counts[idx]
-            average = float(col_total) / col_count if col_count else 0
             if as_percent:
-                average = average / 100
+                average = float(col_total) / overall_total
+            else:
+                col_count = col_counts[idx]
+                average = float(col_total) / col_count if col_count else 0
             averages.append(average)
-        average_total = sum(row_totals) / len(row_totals)
 
-        # Heatmap!
-        return render_template('bitmapist/_heatmap.html',
-                       cohort=cohort,
-                       dates=date_strings,
-                       totals=row_totals,
-                       averages=averages,
-                       average_total=average_total,
-                       time_group=time_group,
-                       as_percent=as_percent,
-                       num_rows=num_rows,
-                       num_cols=num_cols
-                     )
+        # TODO: remove unnecessary keys from json return
+        cohort_data = {
+            'cohort': cohort,
+            'dates': date_strings,
+            'total': overall_total,
+            'totals': row_totals,
+            'averages': averages,
+            'time_group': time_group,
+            'as_percent': as_percent,
+            'num_rows': num_rows,
+            'num_cols': num_cols
+        }
+
+        if request.args.get('json'):
+            return json.dumps(cohort_data, indent=4)
+        else:
+            return render_template('bitmapist/_heatmap.html', **cohort_data)
