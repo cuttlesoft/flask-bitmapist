@@ -6,6 +6,7 @@
 
     :copyright: (c) 2016 by Cuttlesoft, LLC.
     :license: MIT, see LICENSE for more details.
+
 """
 
 from datetime import datetime
@@ -44,14 +45,15 @@ def get_cohort(primary_event_name, secondary_event_name,
                num_rows=10, num_cols=10, system='default'):
     """
     Fetch the data from bitmapist for the cohort.
-    :param :primary_event_name Name of primary event for defining cohort
-    :param :secondary_event_name Name of secondary event for defining cohort
-    :param :additional_events List of additional event names + operations by which to filter cohort
-    :param :time_group Time scale by which to group results; can be `days`, `weeks`, `months`, `years`
-    :param :num_rows How many results rows to get; corresponds to how far back to get results from current time
-    :param :num_cols How many results cols to get; corresponds to how far forward to get results from each time point
-    :param :system Which bitmapist should be used
-    :return Tuple of (list of lists of cohort results, list of dates for cohort, primary event total for each date)
+
+    :param primary_event_name: Name of primary event for defining cohort
+    :param secondary_event_name: Name of secondary event for defining cohort
+    :param additional_events: List of additional event names + operations by which to filter cohort
+    :param time_group: Time scale by which to group results; can be `days`, `weeks`, `months`, `years`
+    :param num_rows: How many results rows to get; corresponds to how far back to get results from current time
+    :param num_cols: How many results cols to get; corresponds to how far forward to get results from each time point
+    :param system: Which bitmapist should be used
+    :returns: Tuple of (list of lists of cohort results, list of dates for cohort, primary event total for each date)
     """
 
     cohort = []
@@ -113,12 +115,13 @@ def chain_events(base_event_name, events_to_chain, time_point, time_group,
                  system='default'):
     """
     Chain additional events with base set of events
-    :param :base_event_name Name of event to chain additional events to/with
-    :param :events_to_chain List of additional event names to chain
-    :param :time_point Point in time at which to get events (i.e., `now` argument)
-    :param :time_group Time scale by which to group results; can be `days`, `weeks`, `months`, `years`
-    :param :system Which bitmapist should be used
-    :return
+
+    :param base_event_name: Name of event to chain additional events to/with
+    :param events_to_chain: List of additional event names to chain
+    :param time_point: Point in time at which to get events (i.e., `now` argument)
+    :param time_group: Time scale by which to group results; can be `days`, `weeks`, `months`, `years`
+    :param system: Which bitmapist should be used
+    :returns:
     """
 
     fn_get_events = _events_fn(time_group)
