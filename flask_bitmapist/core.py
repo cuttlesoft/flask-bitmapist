@@ -52,5 +52,5 @@ class FlaskBitmapist(object):
 
         app.extensions['bitmapist'] = self
 
-        if not app.config.get('DISABLE_BLUEPRINT'):
+        if not app.config.get('DISABLE_BLUEPRINT', False):
             app.register_blueprint(bitmapist_bp)

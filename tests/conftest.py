@@ -108,8 +108,12 @@ def sqlalchemy(app, request, sqlalchemy_db, sqlalchemy_user):
 
     TESTS_PATH = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
     TESTDB = 'test.sqlite'
-    TESTDB_PATH = os.path.join(os.path.join(TESTS_PATH, 'tests/db'), TESTDB)
+    TESTDB_DIR = os.path.join(TESTS_PATH, 'tests/db')
+    TESTDB_PATH = os.path.join(TESTDB_DIR, TESTDB)
     TESTDB_URI = 'sqlite:///' + TESTDB_PATH
+
+    if not os.path.exists(TESTDB_DIR):
+        os.makedirs(TESTDB_DIR)
 
     app.config['SQLALCHEMY_DATABASE_URI'] = TESTDB_URI
     # app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

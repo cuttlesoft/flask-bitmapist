@@ -51,11 +51,12 @@ def get_cohort(primary_event_name, secondary_event_name,
     :param :num_rows How many results rows to get; corresponds to how far back to get results from current time
     :param :num_cols How many results cols to get; corresponds to how far forward to get results from each time point
     :param :system Which bitmapist should be used
-    :return Tuple of (list of lists of cohort results, list of dates for cohort)
+    :return Tuple of (list of lists of cohort results, list of dates for cohort, primary event total for each date)
     """
 
     cohort = []
     dates = []
+    primary_event_totals = []  # for percents
 
     fn_get_events = _events_fn(time_group)
 
@@ -73,12 +74,14 @@ def get_cohort(primary_event_name, secondary_event_name,
         # get results for each date interval from current time point for the row
         row = []
         primary_event = fn_get_events(primary_event_name, event_time, system)
+
         primary_total = len(primary_event)
+        primary_event_totals.append(primary_total)
 
         dates.append(event_time)
 
-        if not len(primary_event):
-            row = [''] * num_cols
+        if not primary_total:
+            row = [None] * num_cols
             continue
 
         for j in range(num_cols):
@@ -93,8 +96,7 @@ def get_cohort(primary_event_name, secondary_event_name,
                 combined_events = BitOpAnd(chained_events, primary_event)
                 combined_total = len(combined_events)
             else:
-                combined_total = ''
-
+                combined_total = None
 
             row.append(combined_total)
 
@@ -104,7 +106,7 @@ def get_cohort(primary_event_name, secondary_event_name,
     # Clean up results of BitOps
     delete_runtime_bitop_keys()
 
-    return cohort, dates
+    return cohort, dates, primary_event_totals
 
 
 def chain_events(base_event_name, events_to_chain, time_point, time_group,
