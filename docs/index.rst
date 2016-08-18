@@ -196,8 +196,12 @@ Let's start by creating a simple app::
 API
 ===
 
-.. automodule:: flask_bitmapist.utils
-  :members:
+.. .. automodule:: flask_bitmapist.utils
+..  :members:
+
+.. autofunction:: flask_bitmapist.utils.get_event_data
+.. autofunction:: flask_bitmapist.utils.get_cohort
+.. autofunction:: flask_bitmapist.utils.chain_events
 
 
 Indices and tables
