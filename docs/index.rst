@@ -38,6 +38,24 @@ Or just call the mark_event function directly::
 
   >>> mark_event('user:logged_in', user.id)
 
+Configuration
+-------------
+
+app.config['BITMAPIST_REDIS_URL']
+
++----------------------+-------+-----------------------+
+|OPTION                |TYPE   |DESCRIPTION            |
++======================+=======+=======================+
+|BITMAPIST_REDIS_URL   |String |Set url of redis       |
++----------------------+-------+-----------------------+
+|BITMAPIST_TRACK_HOURLY|Boolean|Track events by hour   |
++----------------------+-------+-----------------------+
+|DISABLE_BLUEPRINT     |Boolean|Disable routes         |
++----------------------+-------+-----------------------+
+|TESTING               |Boolean|Use testing environment|
++----------------------+-------+-----------------------+
+
+
 Quickstart
 ==========
 
