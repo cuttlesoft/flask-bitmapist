@@ -193,6 +193,12 @@ Let's start by creating a simple app::
   if __name__ == '__main__':
     app.run()
 
+API
+===
+
+.. automodule:: flask_bitmapist.utils
+  :members:
+
 
 Indices and tables
 ------------------
