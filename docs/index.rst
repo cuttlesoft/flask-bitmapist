@@ -13,25 +13,22 @@ Flask-Bitmapist
 
 Flask-Bitmapist is a Flask extension that creates a simple interface to the `Bitmapist <https://github.com/Doist/bitmapist>`_ analytics library.
 
-Flask-Bitmapist is a flexible system which allows easy tracking of user activity
-such as user login, logout, creation, deletion, and updating.
+Events are registered with the name of the event (e.g., "user:logged_in") and the object id (e.g., the logged in user's id).
 
-Events are marked with the name of the event (e.g., `user:logged_in`) and the object id (e.g., the logged in user's id).
+There are four different ways to register events from your Flask app:
+ * Call a function decorated with the ``@mark()`` decorator
+ * Use the ``Bitmapistable`` mixin (note: current ORM support is limited to SQLAlchemy)
+ * With the Flask-Login extension, user login/logout will register corresponding events automatically
+ * Call the ``mark_event()`` function directly
 
-There are four different ways to mark events in your Flask app:
- * Call a function with the `@mark` decorator
- * Use the `Bitmapistable` mixin (note: current ORM support is limited to SQLAlchemy)
- * User login/logout events marked automatically with the Flask-Login extension
- * Call the `mark_event` function directly
-
-To use the `@mark` decorator::
+To use the ``@mark()`` decorator::
 
   @mark('user:reset_password', user.id)
   def reset_password():
       pass
 
 
-To use the `Bitmapistable` mixin::
+To use the ``Bitmapistable`` mixin::
 
   from flask_bitmapist import Bitmapistable
 
@@ -41,13 +38,13 @@ To use the `Bitmapistable` mixin::
 .. from flask_bitmapist import SQLAlchemyBitmapistable as Bitmapistable
 
 
-If you are using Flask-Login, `user:logged_in` and `user:logged_out` events will be marked automatically on user login/logout::
+If you are using Flask-Login, "user:logged_in" and "user:logged_out" events will be registered automatically on user login and user logout, respectively::
 
   >>> flask_login.login_user(user)
   >>> flask_login.logout_user(current_user)
 
 
-You can also call the `mark_event` function directly::
+You can also call the ``mark_event()`` function directly::
 
   >>> mark_event('user:action_taken', user.id)
 
@@ -81,14 +78,14 @@ Begin by importing FlaskBitmapist and initializing the FlaskBitmapist applicatio
   flaskbitmapist.init_app(app)
 
 
-You are then free to use whichever method(s) you find best suited to your application for marking events.
+You are then free to use whichever method(s) you find best suited to your application for marking and registering events.
 
 
-Configuration
--------------
+Configuration Options
+---------------------
 
 ======================   ========================================================   ========================
-Configuration option     Description                                                Default
+Configuration Options    Description                                                Default
 ======================   ========================================================   ========================
 BITMAPIST_REDIS_URL      Location where Redis server is running                     "redis://localhost:6379"
 BITMAPIST_REDIS_SYSTEM   Name of Redis system to use for Bitmapist                  "default"
@@ -103,11 +100,9 @@ Usage
 Decorator
 ^^^^^^^^^
 
-.. Usage of the `@mark` decorator can be useful when you want to track interaction with a certain function that does not deal directly with the model (like a view or api ??).
+Usage of the ``@mark()`` decorator can be useful when you want to track interactions that do not deal directly with the database model.
 
-Usage of the `@mark` decorator can be useful when you want to track interactions that do not deal directly with the database model.
-
-To use the decorator, import and attach it to the function, providing the event name and user id::
+To use, import the decorator and attach it to the function, providing the event name and user id::
 
   from flask_bitmapist import mark
 
@@ -121,28 +116,26 @@ Mixin
 
 The mixin can be used to track when a user object is created, updated, or deleted. It interacts directly with the ORM to register events on insert, update, or delete.
 
-To use the mixin, import and extend the desired class with it::
+To use, import the mixin and extend the desired class with it::
 
   from flask_bitmapist import Bitmapistable
 
   class User(db.Model, Bitmapistable):
     id = db.Column(db.Integer, primary_key=True)
 
-The event `user:created` will then be registered when a new user is instantiated
-and committed to the db::
+The event "user:created" will then be registered when a new user is instantiated and committed to the database::
 
   user = User()
   db.session.add(user)
   db.session.commit()
 
-Similarly, `user:updated` and `user:deleted` will be registered for a given user on updating and deleting, respectively.
+Similarly, "user:updated" and "user:deleted" will be registered for a given user on updating and deleting, respectively.
 
 
 Flask-Login
 ^^^^^^^^^^^
 
-.. from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
-The Flask-Login is a common form of user management for many Flask applications. Flask-Bitmapist integrates with this extension to track user login/logout events automatically via the LoginManager and UserMixin::
+The Flask-Login extension is a common means of user management for many Flask applications. Flask-Bitmapist integrates with this extension to track user login/logout events automatically via its LoginManager and UserMixin::
 
   from flask_login import LoginManager, UserMixin
 
@@ -152,7 +145,7 @@ The Flask-Login is a common form of user management for many Flask applications.
   login_manager = LoginManager()
   login_manager.init_app(app)
 
-Create and login the user, and the event `user:logged_in` will be registered automatically, and the same works for user logout and the `user:logged_in` event::
+Create and log in the user, and the event "user:logged_in" will be registered automatically; the same works for logging out a user and the "user:logged_out" event::
 
   from flask_login import current_user, login_user, logout_user
 
@@ -165,8 +158,8 @@ Create and login the user, and the event `user:logged_in` will be registered aut
   logout_user(current_user)
 
 
-mark_event Function
-^^^^^^^^^^^^^^^^^^^
+Function Call
+^^^^^^^^^^^^^
 
 The most raw way to use Flask-Bitmapist is to directly call ``mark_event()``::
 
