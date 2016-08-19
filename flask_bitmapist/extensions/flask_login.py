@@ -2,7 +2,7 @@
 
 from flask.ext.login import user_logged_in, user_logged_out
 
-from flask_bitmapist import mark_event
+from bitmapist import mark_event
 
 
 @user_logged_in.connect

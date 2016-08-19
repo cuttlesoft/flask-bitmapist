@@ -11,6 +11,12 @@ from core import FlaskBitmapist
 from decorators import mark
 from utils import chain_events, get_cohort, get_event_data
 
+try:
+    import flask_login
+    from extensions.flask_login import mark_login, mark_logout
+except ImportError:
+    pass
+
 from bitmapist import (mark_event, unmark_event,
                        MonthEvents, WeekEvents, DayEvents, HourEvents,
                        BitOpAnd, BitOpOr, get_event_names)
