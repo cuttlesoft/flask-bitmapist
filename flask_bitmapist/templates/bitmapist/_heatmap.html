@@ -1,0 +1,60 @@
+<div class="table-responsive">
+  <table class="cohort-heatmap table table-bordered" cellpadding="0" cellspacing="0">
+    <thead>
+      <tr>
+        <th class="date"></th>
+        <th class="total-count">Total ({{ total|int }})</th>
+
+        {% for date in dates[:num_cols] %}
+          <th class="entry">{{ date }}</th>
+          <!-- <th class="entry">+{# n #} {# time_group #}(s)</th> -->
+        {% endfor %}
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for i in range(num_rows) %}
+        {% set cohort_row = cohort[i] or [] %}
+
+        <tr>
+          <td class="date">{{ dates[i] }}</td>
+          <td class="total-count">{{ totals[i] }}</td>
+          {% for j in range(num_cols) %}
+            {% set value = cohort_row[j] if cohort_row[j] != None else '' %}
+
+            {% if value %}
+              {% set percent = value if as_percent else (value / totals[i])|float %}
+            {% else %}
+              {% set percent = 0 %}
+            {% endif %}
+
+            <td style="background-color: hsla(189, 80%, 48%, {{ percent|float|round(1) }}); color: hsla(0, 0%, 0%, {{ (percent|float + 0.25)|round(1) }});">
+              {% if as_percent and value != '' %}
+                {{ (value * 100)|round(2) }}%
+              {% else %}
+                {{ value }}
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+
+      {% endfor %}
+
+      <tr class="averages">
+        <td><strong>Average</strong></td>
+        <td>{{ (total / (totals|length))|int }}</td>
+
+        {% for average in averages %}
+          <td>
+            {% if as_percent %}
+              {{ (average * 100)|round(2) }}%
+            {% else %}
+              {{ average|int }}
+            {% endif %}
+          </td>
+        {% endfor %}
+
+      </tr>
+    </tbody>
+  </table>
+</div>

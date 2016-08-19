@@ -45,6 +45,7 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
+tests/db/
 
 # Translations
 *.mo
@@ -59,5 +60,11 @@ docs/_build/
 # PyBuilder
 target/
 
-#Ipython Notebook
+# Ipython Notebook
 .ipynb_checkpoints
+
+# Redis snapshots
+dump.rdb
+
+# Other
+.DS_Store
