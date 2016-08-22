@@ -8,16 +8,16 @@
     :license: MIT, see LICENSE for more details.
 """
 
-import json, os
+import json
+import os
 
 from datetime import datetime
 
-from flask import Blueprint, jsonify, render_template, request
+from flask import Blueprint, render_template, request
 
-from bitmapist import get_event_names, DayEvents, WeekEvents, MonthEvents, YearEvents  # BitOpAnd, BitOpOr
+from bitmapist import get_event_names
 
 from .utils import get_cohort, get_event_data
-
 
 
 root = os.path.abspath(os.path.dirname(__file__))
@@ -38,12 +38,14 @@ def inject_version():
 def index():
     now = datetime.utcnow()
 
-    day_events = len(list(DayEvents('user:logged_in', now.year, now.month, now.day)))
-    week_events = len(list(WeekEvents('user:logged_in', now.year, now.isocalendar()[1])))
-    month_events = len(list(MonthEvents('user:logged_in', now.year, now.month)))
-    year_events = len(list(YearEvents('user:logged_in', now.year)))
+    day_events = len(list(get_event_data('user:logged_in', 'day', now)))
+    week_events = len(list(get_event_data('user:logged_in', 'week', now)))
+    month_events = len(list(get_event_data('user:logged_in', 'month', now)))
+    year_events = len(list(get_event_data('user:logged_in', 'year', now)))
     # return render_template('bitmapist/data.html', ...
-    return render_template('bitmapist/index.html', events=get_event_names(), day_events=day_events, week_events=week_events, month_events=month_events, year_events=year_events)
+    return render_template('bitmapist/index.html', events=get_event_names(),
+                           day_events=day_events, week_events=week_events,
+                           month_events=month_events, year_events=year_events)
 
 
 @bitmapist_bp.route('/cohort', methods=['GET', 'POST'])
@@ -51,33 +53,34 @@ def cohort():
     if request.method == 'GET':
         now = datetime.utcnow()
         event_names = get_event_names()
-        # TEMPORARY? for display niceness
+        # FOR DEMO PURPOSES:
+        # Nicely format event names for dropdown selection; remove 'user:',
+        # convert '_' to ' ', and prepend 'logged (in, out)' with 'were' for
+        # readability/grammar.
         event_options = []
         for event_name in event_names:
             if 'user:' in event_name:
                 formatted = event_name.replace('user:', '').replace('_', ' ')
-                # such hackery
                 formatted = ('were ' + formatted).replace('were logged', 'logged')
-                # /hackery
                 event_options.append([formatted, event_name])
         event_options = sorted(event_options)
-        # user_events = [e for e in event_names if 'user' in e]
-        # event_options = [u.replace('user_', '') for u in user_events]
 
-        # TEMPORARY: for listing of totals per event
+        # FOR DEMO PURPOSES: list of totals per event
         events = {}
         for event_name in event_names:
             # TODO: + hourly
-            day = len(DayEvents(event_name, now.year, now.month, now.day))
-            week = len(WeekEvents(event_name, now.year, now.isocalendar()[1]))
-            month = len(MonthEvents(event_name, now.year, now.month))
-            year = len(YearEvents(event_name, now.year))
+            day = len(get_event_data(event_name, 'day', now))
+            week = len(get_event_data(event_name, 'week', now))
+            month = len(get_event_data(event_name, 'month', now))
+            year = len(get_event_data(event_name, 'year', now))
             event = (year, month, week, day)
             events[event_name] = event
-        # END TEMP
 
         time_groups = ['day', 'week', 'month', 'year']
-        return render_template('bitmapist/cohort.html', event_options=event_options, time_groups=time_groups, events=events)
+        return render_template('bitmapist/cohort.html',
+                               event_options=event_options,
+                               time_groups=time_groups,
+                               events=events)
 
     elif request.method == 'POST':
         data = json.loads(request.data)
@@ -102,11 +105,12 @@ def cohort():
         num_cols = num_rows if num_cols > num_rows else num_cols
 
         # Get cohort data and associated dates
-        cohort, dates, row_totals = get_cohort(primary_event, secondary_event,
-                                   additional_events=additional_events,
-                                   time_group=time_group,
-                                   num_rows=num_rows,
-                                   num_cols=num_cols)
+        cohort_data = get_cohort(primary_event, secondary_event,
+                                 additional_events=additional_events,
+                                 time_group=time_group,
+                                 num_rows=num_rows,
+                                 num_cols=num_cols)
+        cohort, dates, row_totals = cohort_data
 
         # Format dates for table
         if time_group == 'years':
