@@ -59,8 +59,8 @@ def get_cohort(primary_event_name, secondary_event_name,
     :param str primary_event_name: Name of primary event for defining cohort
     :param str secondary_event_name: Name of secondary event for defining cohort
     :param list additional_events: List of additional events by which to filter
-                                   cohort (e.g., `[{'name': 'user:logged_in',
-                                   'op': 'and'}, ...]`)
+                                   cohort (e.g., ``[{'name': 'user:logged_in',
+                                   'op': 'and'}]``)
     :param str time_group: Time scale by which to group results; can be `days`,
                            `weeks`, `months`, `years`
     :param int num_rows: How many results rows to get; corresponds to how far
@@ -130,17 +130,20 @@ def get_cohort(primary_event_name, secondary_event_name,
     return cohort, dates, primary_event_totals
 
 
-def chain_events(base_event_name, events_to_chain, time_point, time_group,
+def chain_events(base_event_name, events_to_chain, now, time_group,
                  system='default'):
     """
     Chain additional events with a base set of events.
 
+    Note: ``OR`` operators will apply only to their direct predecessors (i.e.,
+    ``A && B && C || D`` will be handled as ``A && B && (C || D)``, and
+    ``A && B || C && D`` will be handled as ``A && (B || C) && D``).
+
     :param str base_event_name: Name of event to chain additional events to/with
     :param list events_to_chain: List of additional event names to chain
-                                 (e.g., `[{'name': 'user:logged_in',
-                                 'op': 'and'}, ...]`)
-    :param datetime time_point: Point in time at which to get events
-                                (i.e., `now` argument)
+                                 (e.g., ``[{'name': 'user:logged_in',
+                                 'op': 'and'}]``)
+    :param datetime now: Time point at which to get event data
     :param str time_group: Time scale by which to group results; can be `days`,
                            `weeks`, `months`, `years`
     :param str system: Which bitmapist should be used
@@ -148,7 +151,7 @@ def chain_events(base_event_name, events_to_chain, time_point, time_group,
     """
 
     fn_get_events = _events_fn(time_group)
-    base_event = fn_get_events(base_event_name, time_point, system)
+    base_event = fn_get_events(base_event_name, now, system)
 
     if not base_event.has_events_marked():
         return ''
@@ -159,7 +162,7 @@ def chain_events(base_event_name, events_to_chain, time_point, time_group,
         # for idx, event_to_chain in enumerate(events_to_chain):
         for event_to_chain in events_to_chain:
             event_name = event_to_chain.get('name')
-            chain_event = fn_get_events(event_name, time_point, system)
+            chain_event = fn_get_events(event_name, now, system)
             chain_events.append(chain_event)
 
         # Each OR should operate only on its immediate predecessor, e.g.,
