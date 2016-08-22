@@ -6,6 +6,7 @@
 ===============
 Flask-Bitmapist
 ===============
+..  .. image:: _static/jelly.png
 
 .. toctree::
   :maxdepth: 2
@@ -77,6 +78,10 @@ Begin by importing FlaskBitmapist and initializing the FlaskBitmapist applicatio
   flaskbitmapist = FlaskBitmapist()
   flaskbitmapist.init_app(app)
 
+
+Ensure that Redis is running; you can specify a port (default: 6379) with the ``--port`` flag::
+
+  $ redis-server
 
 You are then free to use whichever method(s) you find best suited to your application for marking and registering events.
 
@@ -172,7 +177,8 @@ The most raw way to use Flask-Bitmapist is to directly call ``mark_event()``::
 Small Example App
 -----------------
 
-Let's start by creating a simple app::
+.. Let's start by creating a simple app::
+::
 
   from flask import Flask
   from flask_bitmapist import FlaskBitmapist, mark
@@ -192,6 +198,24 @@ Let's start by creating a simple app::
 
   if __name__ == '__main__':
     app.run()
+
+
+Testing
+=======
+
+To run the tests, ensure that you have Redis running on port 6399::
+
+  $ redis-server --port 6399
+
+Then you can simply run::
+
+  $ py.test tests
+
+
+To seed fake data for testing, run::
+
+  $ python scripts/seed.py
+
 
 API
 ===
