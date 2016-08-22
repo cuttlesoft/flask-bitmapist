@@ -28,8 +28,10 @@ def get_event_data(event_name, time_group='days', now=None, system='default'):
     Get the data for a single event at a single event in time.
 
     :param str event_name: Name of event for retrieval
-    :param str time_group: Time scale by which to group results; can be `days`, `weeks`, `months`, `years`
-    :param datetime now: Time point at which to get event data (defaults to current time if None)
+    :param str time_group: Time scale by which to group results; can be `days`,
+                           `weeks`, `months`, `years`
+    :param datetime now: Time point at which to get event data (defaults to
+                         current time if None)
     :param str system: Which bitmapist should be used
     :returns: Bitmapist events collection
     """
@@ -38,14 +40,13 @@ def get_event_data(event_name, time_group='days', now=None, system='default'):
 
 
 def _events_fn(time_group='days'):
-    if time_group == 'days':
+    if time_group == 'days' or time_group == 'day':
         return _day_events_fn
-    elif time_group == 'weeks':
-        # return _weeks_events_fn
+    elif time_group == 'weeks' or time_group == 'week':
         return _week_events_fn
-    elif time_group == 'months':
+    elif time_group == 'months' or time_group == 'month':
         return _month_events_fn
-    elif time_group == 'years':
+    elif time_group == 'years' or time_group == 'year':
         return _year_events_fn
 
 
@@ -57,12 +58,18 @@ def get_cohort(primary_event_name, secondary_event_name,
 
     :param str primary_event_name: Name of primary event for defining cohort
     :param str secondary_event_name: Name of secondary event for defining cohort
-    :param list additional_events: List of additional events by which to filter cohort (e.g., `[{'name': 'user:logged_in', 'op': 'and'}, ...]`)
-    :param str time_group: Time scale by which to group results; can be `days`, `weeks`, `months`, `years`
-    :param int num_rows: How many results rows to get; corresponds to how far back to get results from current time
-    :param int num_cols: How many results cols to get; corresponds to how far forward to get results from each time point
+    :param list additional_events: List of additional events by which to filter
+                                   cohort (e.g., ``[{'name': 'user:logged_in',
+                                   'op': 'and'}]``)
+    :param str time_group: Time scale by which to group results; can be `days`,
+                           `weeks`, `months`, `years`
+    :param int num_rows: How many results rows to get; corresponds to how far
+                         back to get results from current time
+    :param int num_cols: How many results cols to get; corresponds to how far
+                         forward to get results from each time point
     :param str system: Which bitmapist should be used
-    :returns: Tuple of (list of lists of cohort results, list of dates for cohort, primary event total for each date)
+    :returns: Tuple of (list of lists of cohort results, list of dates for
+              cohort, primary event total for each date)
     """
 
     cohort = []
@@ -73,8 +80,11 @@ def get_cohort(primary_event_name, secondary_event_name,
 
     # TIMES
 
-    event_time = datetime.utcnow() - relativedelta(**{ time_group: num_rows - 1 })  # - 1 for deltas between time points (?)
-    increment_delta = lambda t: relativedelta(**{ time_group: t })
+    def increment_delta(t):
+        return relativedelta(**{time_group: t})
+
+    # - 1 for deltas between time points (?)
+    event_time = datetime.utcnow() - relativedelta(**{time_group: num_rows - 1})
 
     if time_group == 'months':
         event_time -= relativedelta(days=event_time.day - 1)  # (?)
@@ -120,21 +130,28 @@ def get_cohort(primary_event_name, secondary_event_name,
     return cohort, dates, primary_event_totals
 
 
-def chain_events(base_event_name, events_to_chain, time_point, time_group,
+def chain_events(base_event_name, events_to_chain, now, time_group,
                  system='default'):
     """
     Chain additional events with a base set of events.
 
+    Note: ``OR`` operators will apply only to their direct predecessors (i.e.,
+    ``A && B && C || D`` will be handled as ``A && B && (C || D)``, and
+    ``A && B || C && D`` will be handled as ``A && (B || C) && D``).
+
     :param str base_event_name: Name of event to chain additional events to/with
-    :param list events_to_chain: List of additional event names to chain (e.g., `[{'name': 'user:logged_in', 'op': 'and'}, ...]`)
-    :param datetime time_point: Point in time at which to get events (i.e., `now` argument)
-    :param str time_group: Time scale by which to group results; can be `days`, `weeks`, `months`, `years`
+    :param list events_to_chain: List of additional event names to chain
+                                 (e.g., ``[{'name': 'user:logged_in',
+                                 'op': 'and'}]``)
+    :param datetime now: Time point at which to get event data
+    :param str time_group: Time scale by which to group results; can be `days`,
+                           `weeks`, `months`, `years`
     :param str system: Which bitmapist should be used
     :returns: Bitmapist events collection
     """
 
     fn_get_events = _events_fn(time_group)
-    base_event = fn_get_events(base_event_name, time_point, system)
+    base_event = fn_get_events(base_event_name, now, system)
 
     if not base_event.has_events_marked():
         return ''
@@ -145,7 +162,7 @@ def chain_events(base_event_name, events_to_chain, time_point, time_group,
         # for idx, event_to_chain in enumerate(events_to_chain):
         for event_to_chain in events_to_chain:
             event_name = event_to_chain.get('name')
-            chain_event = fn_get_events(event_name, time_point, system)
+            chain_event = fn_get_events(event_name, now, system)
             chain_events.append(chain_event)
 
         # Each OR should operate only on its immediate predecessor, e.g.,
@@ -165,7 +182,6 @@ def chain_events(base_event_name, events_to_chain, time_point, time_group,
                 events_to_chain.pop(idx)
 
                 chain_events[idx - 1] = BitOpOr(prev_event, or_event)
-
 
         for idx, name_and_op in enumerate(events_to_chain):
             if name_and_op.get('op') == 'or':

@@ -178,6 +178,7 @@ Small Example App
 -----------------
 
 .. Let's start by creating a simple app::
+
 ::
 
   from flask import Flask
