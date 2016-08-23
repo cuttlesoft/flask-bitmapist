@@ -5,6 +5,9 @@
   <title>Flask-Bitmapist</title>
   <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
   <link rel="stylesheet" href="{{ url_for('.static', filename='css/dashboard.css') }}">
+
+  {% block style %}
+  {% endblock %}
 </head>
 <body>
 
@@ -22,15 +25,11 @@
       </div>
       <div id="navbar" class="navbar-collapse collapse">
         <ul class="nav navbar-nav">
-          <li><a href="{{ url_for('.events') }}">Events</a></li>
-        </ul>
-        <ul class="nav navbar-nav navbar-right">
-          <li><a href="#">Default</a></li>
+          <li><a href="{{ url_for('.cohort') }}">Cohort</a></li>
         </ul>
       </div><!--/.nav-collapse -->
     </div>
   </nav>
-
 
   <div class="container">
     {% block content %}
@@ -39,8 +38,12 @@
       <p>Powered by <a href="https://github.com/cuttlesoft/flask-bitmapist">Flask-Bitmapist</a> v{{ version }}</p>
     </div>
   </div>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+
+  <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script> -->
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
   <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
   <!-- <script src="{{ url_for('.static', filename='js/dashboard.js') }}"></script> -->
+  {% block js %}
+  {% endblock %}
 </body>
 </html>
