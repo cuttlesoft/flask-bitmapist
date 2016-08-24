@@ -209,7 +209,7 @@ To run the tests, ensure that you have Redis running on port 6399::
 
 Then you can simply run::
 
-  $ py.test tests
+  $ python setup.py test
 
 
 To seed fake data for testing, run::
