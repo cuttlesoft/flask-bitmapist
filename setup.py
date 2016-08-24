@@ -59,7 +59,7 @@ setup(
         'Flask>=0.9',
         'bitmapist>=3.97'
     ],
-    tests_require=get_requirements('-dev'),
+    tests_require=get_requirements('-test'),
     cmdclass={'test': PyTest},
     classifiers=[
         'Development Status :: 3 - Alpha',
