@@ -49,7 +49,7 @@ setup(
     author='Cuttlesoft, LLC',
     author_email='engineering@cuttlesoft.com',
     description='Flask extension that creates a simple interface to Bitmapist analytics library',
-    long_description=open('README.md').read() + '\n\n' + open('HISTORY.rst').read(),
+    long_description=open('README.rst').read() + '\n\n' + open('HISTORY.rst').read(),
     packages=find_packages(),
     keywords=['Flask', 'Bitmapist'],
     py_modules=['flask_bitmapist'],
