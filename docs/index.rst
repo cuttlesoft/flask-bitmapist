@@ -6,7 +6,6 @@
 ===============
 Flask-Bitmapist
 ===============
-..  .. image:: _static/jelly.png
 
 .. toctree::
   :maxdepth: 2

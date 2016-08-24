@@ -64,7 +64,7 @@ Config
 | `BITMAPIST_REDIS_SYSTEM` | `string`  | Name of Redis System; defaults to `system` |
 | `BITMAPIST_REDIS_URL`    | `string`  | URL to connect to Redis server; defaults to `redis://localhost:6379` |
 | `BITMAPIST_TRACK_HOURLY` | `boolean` | Tells Bitmapist to track hourly; can also be passed to `mark`,<br> ex: `@mark('active', 1, track_hourly=False)` |
-| `DISABLE_BLUEPRINT`      | `boolean` | Disables registration of default Bitmapist Blueprint |
+| `BITMAPIST_DISABLE_BLUEPRINT`      | `boolean` | Disables registration of default Bitmapist Blueprint |
 
 
 Cohort Blueprint
