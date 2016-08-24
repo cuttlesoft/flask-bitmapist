@@ -6,7 +6,6 @@
 ===============
 Flask-Bitmapist
 ===============
-..  .. image:: _static/jelly.png
 
 .. toctree::
   :maxdepth: 2
@@ -89,14 +88,14 @@ You are then free to use whichever method(s) you find best suited to your applic
 Configuration Options
 ---------------------
 
-======================   ========================================================   ========================
-Configuration Options    Description                                                Default
-======================   ========================================================   ========================
-BITMAPIST_REDIS_URL      Location where Redis server is running                     "redis://localhost:6379"
-BITMAPIST_REDIS_SYSTEM   Name of Redis system to use for Bitmapist                  "default"
-BITMAPIST_TRACK_HOURLY   Whether to track events down to the hour                   False
-DISABLE_BLUEPRINT        Whether to disable registration of the default blueprint   False
-======================   ========================================================   ========================
+===========================  ========================================================   ========================
+Configuration Options              Description                                                Default
+===========================  ========================================================   ========================
+BITMAPIST_REDIS_URL          Location where Redis server is running                     "redis://localhost:6379"
+BITMAPIST_REDIS_SYSTEM       Name of Redis system to use for Bitmapist                  "default"
+BITMAPIST_TRACK_HOURLY       Whether to track events down to the hour                   False
+BITMAPIST_DISABLE_BLUEPRINT  Whether to disable registration of the default blueprint   False
+===========================  ========================================================   ========================
 
 
 Usage
