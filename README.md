@@ -24,7 +24,7 @@ About
 Installation
 ------------
 
-    pip install flask-bitmapist
+    $ pip install flask-bitmapist
 
 
 Usage
@@ -79,3 +79,33 @@ When you initialize the `flask-bitmapist` extension, a blueprint is registered w
 | ----     | -------              | -------------------|
 | `index`  | `/bitmapist/`        | Default Bitmapist index |
 | `cohort` | `/bitmapist/cohort`  | Demo cohort retrieval and heatmap generation |
+
+
+Tests
+-----
+
+To run the tests, ensure that you have Redis running on port 6399::
+
+    $ redis-server --port 6399
+
+
+Then you can simply run::
+
+    $ python setup.py test
+
+
+To seed fake data for testing, run::
+
+    $ python scripts/seed.py
+
+
+Documentation
+-----
+
+The full Flask-Bitmapist documentation is available at [ReadTheDocs](http://flask-bitmapist.readthedocs.io/en/latest/).
+
+
+Contributing
+-----
+
+If you're interested in contributing to Flask-Bitmapist, get started by creating an issue [here](https://github.com/cuttlesoft/flask-bitmapist/issues). Thanks!
