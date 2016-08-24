@@ -41,7 +41,7 @@ To use the ``Bitmapistable`` mixin::
 If you are using Flask-Login, "user:logged_in" and "user:logged_out" events will be registered automatically on user login and user logout, respectively::
 
   >>> flask_login.login_user(user)
-  >>> flask_login.logout_user(current_user)
+  >>> flask_login.logout_user()
 
 
 You can also call the ``mark_event()`` function directly::
@@ -139,7 +139,7 @@ Similarly, "user:updated" and "user:deleted" will be registered for a given user
 Flask-Login
 ^^^^^^^^^^^
 
-The Flask-Login extension is a common means of user management for many Flask applications. Flask-Bitmapist integrates with this extension to track user login/logout events automatically via its LoginManager and UserMixin::
+The Flask-Login extension is a common means of user management for many Flask applications. Flask-Bitmapist integrates with this extension to track user login and logout events automatically via Flask-Login's LoginManager and UserMixin::
 
   from flask_login import LoginManager, UserMixin
 
@@ -151,7 +151,7 @@ The Flask-Login extension is a common means of user management for many Flask ap
 
 Create and log in the user, and the event "user:logged_in" will be registered automatically; the same works for logging out a user and the "user:logged_out" event::
 
-  from flask_login import current_user, login_user, logout_user
+  from flask_login import login_user, logout_user
 
   user = User(id=user_id)
 
@@ -159,7 +159,7 @@ Create and log in the user, and the event "user:logged_in" will be registered au
   login_user(user)
 
   # logout user
-  logout_user(current_user)
+  logout_user()
 
 
 Function Call
