@@ -54,7 +54,7 @@ Installation
 
 Install the extension using pip::
 
-  $ pip install flask_bitmapist
+  $ pip install flask-bitmapist
 
 
 Quickstart
