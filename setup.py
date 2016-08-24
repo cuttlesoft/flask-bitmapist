@@ -42,9 +42,9 @@ class PyTest(TestCommand):
 
 setup(
     name='Flask-Bitmapist',
-    version='0.1.0',
+    version='0.1.1',
     url='http://github.com/cuttlesoft/flask-bitmapist',
-    download_url='https://github.com/cuttlesoft/flask-bitmapist/tarball/0.1.0',
+    download_url='https://github.com/cuttlesoft/flask-bitmapist/tarball/0.1.1',
     license='MIT',
     author='Cuttlesoft, LLC',
     author_email='engineering@cuttlesoft.com',
