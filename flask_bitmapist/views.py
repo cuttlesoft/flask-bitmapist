@@ -38,10 +38,10 @@ def inject_version():
 def index():
     now = datetime.utcnow()
 
-    day_events = len(list(get_event_data('user:logged_in', 'day', now)))
-    week_events = len(list(get_event_data('user:logged_in', 'week', now)))
-    month_events = len(list(get_event_data('user:logged_in', 'month', now)))
-    year_events = len(list(get_event_data('user:logged_in', 'year', now)))
+    day_events = len(list(get_event_data('user:logged_in', 'days', now)))
+    week_events = len(list(get_event_data('user:logged_in', 'weeks', now)))
+    month_events = len(list(get_event_data('user:logged_in', 'months', now)))
+    year_events = len(list(get_event_data('user:logged_in', 'years', now)))
     # return render_template('bitmapist/data.html', ...
     return render_template('bitmapist/index.html', events=get_event_names(),
                            day_events=day_events, week_events=week_events,
@@ -51,32 +51,33 @@ def index():
 @bitmapist_bp.route('/cohort', methods=['GET', 'POST'])
 def cohort():
     if request.method == 'GET':
-        now = datetime.utcnow()
         event_names = get_event_names()
         # FOR DEMO PURPOSES:
         # Nicely format event names for dropdown selection; remove 'user:',
-        # convert '_' to ' ', and prepend 'logged (in, out)' with 'were' for
-        # readability/grammar.
+        # convert '_' to ' ', and prepend 'created/updated/deleted' with 'were'
+        # for readability/grammar.
         event_options = []
         for event_name in event_names:
             if 'user:' in event_name:
                 formatted = event_name.replace('user:', '').replace('_', ' ')
-                formatted = ('were ' + formatted).replace('were logged', 'logged')
+                if formatted in ['created', 'updated', 'deleted']:
+                    formatted = 'were %s' % formatted
                 event_options.append([formatted, event_name])
         event_options = sorted(event_options)
 
         # FOR DEMO PURPOSES: list of totals per event
+        now = datetime.utcnow()
         events = {}
         for event_name in event_names:
             # TODO: + hourly
-            day = len(get_event_data(event_name, 'day', now))
-            week = len(get_event_data(event_name, 'week', now))
-            month = len(get_event_data(event_name, 'month', now))
-            year = len(get_event_data(event_name, 'year', now))
+            day = len(get_event_data(event_name, 'days', now))
+            week = len(get_event_data(event_name, 'weeks', now))
+            month = len(get_event_data(event_name, 'months', now))
+            year = len(get_event_data(event_name, 'years', now))
             event = (year, month, week, day)
             events[event_name] = event
 
-        time_groups = ['day', 'week', 'month', 'year']
+        time_groups = ['day', 'week', 'month', 'year']  # singular for display
         return render_template('bitmapist/cohort.html',
                                event_options=event_options,
                                time_groups=time_groups,
@@ -91,7 +92,8 @@ def cohort():
         additional_events = data.get('additional_events', [])
         # Cohort settings
         time_group = data.get('time_group', 'days')
-        as_percent = data.get('as_percent', True)
+        as_percent = data.get('as_percent', False)
+        with_replacement = data.get('with_replacement', False)
         num_rows = int(data.get('num_rows', 20))
         num_cols = int(data.get('num_cols', 10))
 
@@ -108,8 +110,8 @@ def cohort():
         cohort_data = get_cohort(primary_event, secondary_event,
                                  additional_events=additional_events,
                                  time_group=time_group,
-                                 num_rows=num_rows,
-                                 num_cols=num_cols)
+                                 num_rows=num_rows, num_cols=num_cols,
+                                 with_replacement=with_replacement)
         cohort, dates, row_totals = cohort_data
 
         # Format dates for table
@@ -124,27 +126,33 @@ def cohort():
 
         date_strings = [dt.strftime(dt_format) for dt in dates]
 
-        # Get column totals, averages, and percent values
-        col_totals = [0] * num_cols
-        col_counts = [0] * num_cols
-        for i, row in enumerate(cohort):
-            for j, val in enumerate(row):
-                if val is not None:
-                    col_totals[j] += val
-                    col_counts[j] += 1  # exclude non-zero empties from averages
-
-            if as_percent and row_totals[i]:
-                cohort[i] = [float(r) / row_totals[i] if r is not None else r for r in row]
-
-        # Get averages for table
+        # Get overall total
         overall_total = sum(row_totals)
+
+        # Get column totals (pre-percent)
+        col_counts = []
+        col_totals = []
+        for j in range(num_cols):
+            col = [row[j] for row in cohort if row[j] is not None]
+            col_counts.append(len(col))
+            col_totals.append(sum(col))
+
+        # Get each cohort value as percents if as_percent
+        if as_percent:
+            for i, row in enumerate(cohort):
+                if row_totals[i]:
+                    # calculate percent value for each (unless None)
+                    cohort[i] = [float(r) / row_totals[i] if r is not None else r for r in row]
+
+        # Get column averages (post-percent)
+        # TODO: do not loop range(num_cols) twice, but necessary as-is so that,
+        #       if getting results as percents, col totals are calculated with
+        #       numbers of users (always) but col averages are calculated with
+        #       percent values
         averages = []
-        for idx, col_total in enumerate(col_totals):
-            if as_percent:
-                average = float(col_total) / overall_total
-            else:
-                col_count = col_counts[idx]
-                average = float(col_total) / col_count if col_count else 0
+        for j in range(num_cols):
+            col = [row[j] for row in cohort if row[j] is not None]
+            average = float(sum(col)) / col_counts[j] if col_counts[j] else 0
             averages.append(average)
 
         # TODO: remove unnecessary keys from json return
@@ -152,7 +160,8 @@ def cohort():
             'cohort': cohort,
             'dates': date_strings,
             'total': overall_total,
-            'totals': row_totals,
+            'row_totals': row_totals,
+            'col_totals': col_totals,
             'averages': averages,
             'time_group': time_group,
             'as_percent': as_percent,

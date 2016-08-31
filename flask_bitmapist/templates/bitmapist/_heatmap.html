@@ -3,10 +3,10 @@
     <thead>
       <tr>
         <th class="date"></th>
-        <th class="total-count">Total ({{ total|int }})</th>
+        <th class="total-count">Users</th>
 
-        {% for date in dates[:num_cols] %}
-          <th class="entry">{{ date }}</th>
+        {% for j in range(num_cols) %}
+          <th class="entry">{{ '< 1' if j == 0 else '+ %s' % j }} {{ time_group }}</th>
           <!-- <th class="entry">+{# n #} {# time_group #}(s)</th> -->
         {% endfor %}
       </tr>
@@ -18,12 +18,12 @@
 
         <tr>
           <td class="date">{{ dates[i] }}</td>
-          <td class="total-count">{{ totals[i] }}</td>
+          <td class="total-count">{{ row_totals[i] }}</td>
           {% for j in range(num_cols) %}
             {% set value = cohort_row[j] if cohort_row[j] != None else '' %}
 
             {% if value %}
-              {% set percent = value if as_percent else (value / totals[i])|float %}
+              {% set percent = value if as_percent else (value / row_totals[i])|float %}
             {% else %}
               {% set percent = 0 %}
             {% endif %}
@@ -41,10 +41,10 @@
       {% endfor %}
 
       <tr class="averages">
-        <td><strong>Average</strong></td>
-        <td>{{ (total / (totals|length))|int }}</td>
-
+        <td>Average</td>
+        <td>{{ (total / (row_totals|length))|int }}</td>
         {% for average in averages %}
+          {% set average = average or 0 %}
           <td>
             {% if as_percent %}
               {{ (average * 100)|round(2) }}%
@@ -54,6 +54,13 @@
           </td>
         {% endfor %}
 
+      </tr>
+      <tr class="totals">
+        <td>Total</td>
+        <td>{{ total|int }}</td>
+        {% for col_total in col_totals %}
+          <td>{{ (col_total if col_total else 0)|int }}</td>
+        {% endfor %}
       </tr>
     </tbody>
   </table>

@@ -70,12 +70,14 @@ def setup_chain_events(time_group='days'):
 
 @mock.patch('flask_bitmapist.utils.BitOpAnd')
 @mock.patch('flask_bitmapist.utils.BitOpOr')
+@mock.patch('flask_bitmapist.utils.BitOpXor')
 @mock.patch('flask_bitmapist.utils.chain_events')
 @mock.patch('flask_bitmapist.utils.YearEvents')
 @mock.patch('flask_bitmapist.utils.MonthEvents')
 @mock.patch('flask_bitmapist.utils.WeekEvents')
-def test_get_cohort(mock_week_events, mock_month_events, mock_year_events,
-                    mock_chain_events, mock_bit_op_or, mock_bit_op_and):
+def test_get_cohort(mock_week_events, mock_month_events,
+                    mock_year_events, mock_chain_events,
+                    mock_bit_op_xor, mock_bit_op_or, mock_bit_op_and):
     # test cohort returns
     from random import randint
 
@@ -97,6 +99,7 @@ def test_get_cohort(mock_week_events, mock_month_events, mock_year_events,
     # Simulate BitOpAnd & BitOpOr returns but with lists
     mock_bit_op_and.side_effect = lambda x, y: list(set(x) & set(y))
     mock_bit_op_or.side_effect = lambda x, y: list(set(x) | set(y))
+    mock_bit_op_xor.side_effect = lambda x, y: list(set(x) ^ set(y))
 
     c1, d1, t1 = get_cohort('A', 'B', time_group='weeks', num_rows=4, num_cols=4)
     c2, d2, t2 = get_cohort('A', 'B', time_group='months', num_rows=6, num_cols=5)
@@ -134,12 +137,14 @@ def test_get_cohort(mock_week_events, mock_month_events, mock_year_events,
         assert _week(d) == _week(now - timedelta(weeks=3-idx))
     # 2 - months
     for idx, d in enumerate(d2):
+        this_month = now.replace(day=1)  # work with first day of month
         months_ago = (5 - idx) * 365 / 12  # no 'months' arg for timedelta
-        assert _month(d) == _month(now - timedelta(months_ago))
+        assert _month(d) == _month(this_month - timedelta(months_ago))
     # 3 - years
     for idx, d in enumerate(d3):
+        this_year = now.replace(month=1, day=1)  # work with first day of year
         years_ago = (1 - idx) * 365  # no 'years' arg for timedelta
-        assert _year(d) == _year(now - timedelta(years_ago))
+        assert _year(d) == _year(this_year - timedelta(years_ago))
 
 
 def test_chain_events():
