@@ -88,8 +88,9 @@ def get_cohort(primary_event_name, secondary_event_name,
     def increment_delta(t):
         return relativedelta(**{time_group: t})
 
+    now = datetime.utcnow()
     # - 1 for deltas between time points (?)
-    event_time = datetime.utcnow() - relativedelta(**{time_group: num_rows - 1})
+    event_time = now - relativedelta(**{time_group: num_rows - 1})
 
     if time_group == 'months':
         event_time -= relativedelta(days=event_time.day - 1)  # (?)
@@ -113,19 +114,24 @@ def get_cohort(primary_event_name, secondary_event_name,
                 # get results for each event chain for current incremented time
                 incremented = event_time + increment_delta(j)
 
-                chained_events = chain_events(secondary_event_name,
-                                              additional_events,
-                                              incremented, time_group, system)
-
-                if chained_events:
-                    combined_events = BitOpAnd(chained_events, primary_event)
-                    combined_total = len(combined_events)
-
-                    if not with_replacement:
-                        primary_event = BitOpXor(primary_event, combined_events)
+                if incremented > now:
+                    # date in future; no events and no need to go through chain
+                    combined_total = None
 
                 else:
-                    combined_total = None
+                    chained_events = chain_events(secondary_event_name,
+                                                  additional_events,
+                                                  incremented, time_group, system)
+
+                    if chained_events:
+                        combined_events = BitOpAnd(chained_events, primary_event)
+                        combined_total = len(combined_events)
+
+                        if not with_replacement:
+                            primary_event = BitOpXor(primary_event, combined_events)
+
+                    else:
+                        combined_total = 0
 
                 row.append(combined_total)
 

@@ -51,7 +51,6 @@ def index():
 @bitmapist_bp.route('/cohort', methods=['GET', 'POST'])
 def cohort():
     if request.method == 'GET':
-        now = datetime.utcnow()
         event_names = get_event_names()
         # FOR DEMO PURPOSES:
         # Nicely format event names for dropdown selection; remove 'user:',
@@ -67,6 +66,7 @@ def cohort():
         event_options = sorted(event_options)
 
         # FOR DEMO PURPOSES: list of totals per event
+        now = datetime.utcnow()
         events = {}
         for event_name in event_names:
             # TODO: + hourly
@@ -126,28 +126,33 @@ def cohort():
 
         date_strings = [dt.strftime(dt_format) for dt in dates]
 
-        # Get column totals, averages, and percent values
-        col_totals = [0] * num_cols
-        col_counts = [0] * num_cols
-        for i, row in enumerate(cohort):
-            for j, val in enumerate(row):
-                if val is not None:
-                    col_totals[j] += val
-                    col_counts[j] += 1  # exclude non-zero empties from averages
-
-            if as_percent and row_totals[i]:
-                # calculate percent value for each (unless None)
-                cohort[i] = [float(r) / row_totals[i] if r is not None else r for r in row]
-
-        # Get averages for table
+        # Get overall total
         overall_total = sum(row_totals)
+
+        # Get column totals (pre-percent)
+        col_counts = []
+        col_totals = []
+        for j in range(num_cols):
+            col = [row[j] for row in cohort if row[j] is not None]
+            col_counts.append(len(col))
+            col_totals.append(sum(col))
+
+        # Get each cohort value as percents if as_percent
+        if as_percent:
+            for i, row in enumerate(cohort):
+                if row_totals[i]:
+                    # calculate percent value for each (unless None)
+                    cohort[i] = [float(r) / row_totals[i] if r is not None else r for r in row]
+
+        # Get column averages (post-percent)
+        # TODO: do not loop range(num_cols) twice, but necessary as-is so that,
+        #       if getting results as percents, col totals are calculated with
+        #       numbers of users (always) but col averages are calculated with
+        #       percent values
         averages = []
-        for idx, col_total in enumerate(col_totals):
-            if as_percent:
-                average = float(col_total) / overall_total if overall_total else 0
-            else:
-                col_count = col_counts[idx]
-                average = float(col_total) / col_count if col_count else 0
+        for j in range(num_cols):
+            col = [row[j] for row in cohort if row[j] is not None]
+            average = float(sum(col)) / col_counts[j] if col_counts[j] else 0
             averages.append(average)
 
         # TODO: remove unnecessary keys from json return
