@@ -42,7 +42,6 @@ def index():
     week_events = len(list(get_event_data('user:logged_in', 'weeks', now)))
     month_events = len(list(get_event_data('user:logged_in', 'months', now)))
     year_events = len(list(get_event_data('user:logged_in', 'years', now)))
-    # return render_template('bitmapist/data.html', ...
     return render_template('bitmapist/index.html', events=get_event_names(),
                            day_events=day_events, week_events=week_events,
                            month_events=month_events, year_events=year_events)
