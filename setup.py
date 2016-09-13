@@ -8,16 +8,29 @@
     :license: MIT, see LICENSE for more details.
 """
 
+import ast
+import re
 import sys
 
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 
+
 def get_requirements(suffix=''):
     with open('requirements%s.txt' % suffix) as f:
         rv = f.read().splitlines()
     return rv
+
+
+def get_version():
+    _version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+    with open('flask_bitmapist/__init__.py', 'rb') as f:
+        version = str(ast.literal_eval(_version_re.search(
+            f.read().decode('utf-8')).group(1)))
+
+    return version
 
 
 class PyTest(TestCommand):
@@ -39,12 +52,14 @@ class PyTest(TestCommand):
         errno = pytest.main(self.test_args)
         sys.exit(errno)
 
+_version = get_version()
+
 
 setup(
     name='Flask-Bitmapist',
-    version='0.1.1',
+    version=_version,
     url='http://github.com/cuttlesoft/flask-bitmapist',
-    download_url='https://github.com/cuttlesoft/flask-bitmapist/tarball/0.1.1',
+    download_url='https://github.com/cuttlesoft/flask-bitmapist/tarball/' + _version,
     license='MIT',
     author='Cuttlesoft, LLC',
     author_email='engineering@cuttlesoft.com',
