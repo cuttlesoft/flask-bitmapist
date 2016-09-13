@@ -10,6 +10,10 @@ select.op {
     font-size: 0.75em;
 }
 
+.form-group .checkbox {
+    text-align: left;
+}
+
 .form-group button.btn-xs {
     margin-top: 0.5em;
 }
@@ -28,6 +32,7 @@ table.cohort-heatmap {
 
 table.cohort-heatmap th,
 table.cohort-heatmap td {
+    font-weight: normal;
     text-align: center;
 }
 
@@ -45,6 +50,25 @@ table.cohort-heatmap td.total-count {
 
 table.cohort-heatmap tr.averages td {
     border-top: 2px solid #DDD;
+    border-bottom: none;
+}
+
+table.cohort-heatmap tr.totals td {
+    border-top: none;
+    font-weight: bold;
+}
+
+.event-stats {
+    font-size: 0.75em;
+    overflow-wrap: break-word;
+}
+
+.event-stats h1 {
+    font-size: 2.25em;
+}
+
+.event-stats ul .pull-left:first-of-type {
+    margin-right: 2em;
 }
 
 </style>
@@ -64,7 +88,6 @@ table.cohort-heatmap tr.averages td {
 
         <div class="col-md-4 col-xs-4">
           <select name="main-event" class="form-control">
-            <!-- <option selected disabled>did something</option> -->
             <option selected disabled>...</option>
             {% for name, value in event_options %}
             <option value="{{ value }}">{{ name }}</option>
@@ -82,7 +105,6 @@ table.cohort-heatmap tr.averages td {
 
           <div class="col-md-4 col-xs-4">
             <select name="event-name" class="form-control">
-              <!-- <option selected disabled>did something else</option> -->
               <option selected disabled>...</option>
               {% for name, value in event_options %}
               <option value="{{ value }}">{{ name }}</option>
@@ -170,14 +192,23 @@ table.cohort-heatmap tr.averages td {
       </div>
 
       <div class="form-group">
-        <div class="col-md-8 col-xs-8">
-              <div class="checkbox">
-                <label for="as-percent" class="pull-right">
-                  <input type="checkbox" name="as-percent" id="as-percent"> Display results as percents
-                </label>
-              </div>
+        <div class="col-xs-6 col-xs-offset-2">
+            <div class="checkbox">
+              <label for="as-percent">
+                <input type="checkbox" name="as-percent" id="as-percent"> Display results as percents
+              </label>
             </div>
           </div>
+        </div>
+        <div class="form-group">
+          <div class="col-xs-6 col-xs-offset-2">
+            <div class="checkbox">
+              <label for="with-replacement">
+                <input type="checkbox" name="with-replacement" id="with-replacement"> Include repeat events from the same user
+              </label>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -186,15 +217,23 @@ table.cohort-heatmap tr.averages td {
 
   <div id="cohort-heatmap"></div>
 
-  <!-- {% for e, event_name in event_options %}
-    <div id="{{ event_name }}" class="event-name">
+  <!-- <div class="row">
+  {% for e, event_name in event_options %}
+    <div id="{{ event_name }}" class="col-xs-3 event-stats">
       <h1><small>{{ event_name }}</small></h1>
-      <span class="event-time day">Past Day: {{ events[event_name][3] }}</span>
-      <span class="event-time week">Past Week: {{ events[event_name][2] }}</span>
-      <span class="event-time month">Past Month: {{ events[event_name][1] }}</span>
-      <span class="event-time year">Past Year: {{ events[event_name][0] }}</span>
+      <ul class="list-unstyled">
+        <div class="pull-left">
+          <li class="event-time day">Past Day: {{ events[event_name][3] }}</li>
+          <li class="event-time week">Past Week: {{ events[event_name][2] }}</li>
+        </div>
+        <div class="pull-left">
+          <li class="event-time month">Past Month: {{ events[event_name][1] }}</li>
+          <li class="event-time year">Past Year: {{ events[event_name][0] }}</li>
+        </div>
+      </ul>
     </div>
-  {% endfor %} -->
+  {% endfor %}
+  </div> -->
 </div>
 
 {% endblock %}
@@ -289,7 +328,8 @@ table.cohort-heatmap tr.averages td {
       'time_group': $('select[name=time-group]').val(),
       'num_rows': $('select[name=num-rows]').val(),
       'num_cols': $('select[name=num-cols]').val(),
-      'as_percent': $('input[name=as-percent]').is(':checked')
+      'as_percent': $('input[name=as-percent]').is(':checked'),
+      'with_replacement': $('input[name=with-replacement]').is(':checked')
     };
 
     var additionalEvents = $('.event:not(:first-of-type)');

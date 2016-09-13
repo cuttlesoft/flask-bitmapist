@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 import mock
+from random import randint
 
 from flask import request
 from flask_login import LoginManager, UserMixin, current_user, login_user, logout_user
@@ -68,17 +69,124 @@ def setup_chain_events(time_group='days'):
     return setup_users(), addons
 
 
+# Test contents of cohort returns
+def test_get_cohort_contents():
+    # Generate events to ensure specific cohort returns
+
+    # for cohort @days, m=4, n=4:
+    #     6: [[5]   [0]   [0]   [1]   ]
+    #     7: [[2]   [1]   [2]   [None]]
+    #     0: [[None][None][None][None]]
+    #     5: [[4]   [None][None][None]]
+    #     --   ----  ----  ----  ----
+    #   T 18  11     1     2     1
+
+    # ^^^ as_percent (not with replacement):
+    #     6: [[83%] [0%]  [0%]  [17%] ]
+    #     7: [[29%] [14%] [29%] [None]]
+    #     0: [[None][None][None][None]]
+    #     5: [[80%] [None][None][None]]
+    #     --   ----  ----  ----  ----
+    #   T 18  11     1     2     1
+
+    # ^^^ with_replacement (not as percent):
+    #     6: [[5]   [3]   [0]   [1]   ]
+    #     7: [[2]   [2]   [4]   [None]]
+    #     0: [[None][None][None][None]]
+    #     5: [[4]   [None][None][None]]
+    #     --   ----  ----  ----  ----
+    #   T 18  11     5     4     1
+
+    # TO BUILD: 18 users
+    # [[5+0] [0+3] [0+0] [1+0] ]
+    # [[2+0] [1+1] [2+2] [None]]
+    # [[None][None][None][None]]
+    # [[4+0] [None][None][None]]
+
+    # construct events/history based on desired outcomes (see commented tables)
+
+    event1 = 'user:popped'
+    event2 = 'user:locked'
+
+    dates = [now - timedelta(days=d) for d in range(4)]
+    dates.reverse()
+
+    # users = range(100, 118)
+    users_event1 = [
+        range(100, 106),
+        range(106, 113),
+        [],
+        range(113, 118)
+    ]
+    users_event2 = [
+        [[100, 101, 102, 103, 104], [100, 101, 102], [], [105]],
+        [[106, 107], [107, 108], [106, 107, 109, 110], []],
+        [[], [], [], []],
+        [[113, 114, 115, 116], [], [], []]
+    ]
+
+    # mark constructed events
+    for i, row_date in enumerate(dates):
+        for user_id in users_event1[i]:
+            mark_event(event1, user_id, now=row_date)
+
+        for j in range(len(dates)):
+            col_date = row_date + timedelta(days=j)
+            for user_id in users_event2[i][j]:
+                mark_event(event2, user_id, now=col_date)
+
+    # establish expected cohort returns
+    expected_c0 = [
+        [5, 0, 0, 1],
+        [2, 1, 2, None],
+        [None, None, None, None],
+        [4, None, None, None]
+    ]
+
+    # expected_cp = [
+    #     [0, 0, 0, 0],
+    #     [0, 0, 0, None],
+    #     [0, 0, None, None],
+    #     [0, None, None, None]
+    # ]
+
+    expected_cr = [
+        [5, 3, 0, 1],
+        [2, 2, 4, None],
+        [None, None, None, None],
+        [4, None, None, None]
+    ]
+
+    expected_totals = [6, 7, 0, 5]
+
+    # get cohort(s)
+    c0, d0, t0 = get_cohort(event1, event2, time_group='days', num_rows=4, num_cols=4)
+    # cp, dp, tp = get_cohort(event1, event2, time_group='days', num_rows=4, num_cols=4,
+    #                         as_percent=True)
+    cr, dr, tr = get_cohort(event1, event2, time_group='days', num_rows=4, num_cols=4,
+                            with_replacement=True)
+
+    # assert that returned values match expected values
+    assert c0 == expected_c0
+    # assert cp == expected_cp
+    assert cr == expected_cr
+
+    assert t0 == expected_totals
+    # assert tp == expected_totals
+    assert tr == expected_totals
+
+
+# Test structure of cohort returns
 @mock.patch('flask_bitmapist.utils.BitOpAnd')
 @mock.patch('flask_bitmapist.utils.BitOpOr')
+@mock.patch('flask_bitmapist.utils.BitOpXor')
 @mock.patch('flask_bitmapist.utils.chain_events')
 @mock.patch('flask_bitmapist.utils.YearEvents')
 @mock.patch('flask_bitmapist.utils.MonthEvents')
 @mock.patch('flask_bitmapist.utils.WeekEvents')
-def test_get_cohort(mock_week_events, mock_month_events, mock_year_events,
-                    mock_chain_events, mock_bit_op_or, mock_bit_op_and):
-    # test cohort returns
-    from random import randint
-
+def test_get_cohort_structure(mock_week_events, mock_month_events,
+                              mock_year_events, mock_chain_events,
+                              mock_bit_op_xor, mock_bit_op_or, mock_bit_op_and):
     # Generate list of ints to act as user ids;
     # - between calls, should have some duplicate and some distinct
     # - temporarily convert to a set to force unique list items
@@ -97,6 +205,7 @@ def test_get_cohort(mock_week_events, mock_month_events, mock_year_events,
     # Simulate BitOpAnd & BitOpOr returns but with lists
     mock_bit_op_and.side_effect = lambda x, y: list(set(x) & set(y))
     mock_bit_op_or.side_effect = lambda x, y: list(set(x) | set(y))
+    mock_bit_op_xor.side_effect = lambda x, y: list(set(x) ^ set(y))
 
     c1, d1, t1 = get_cohort('A', 'B', time_group='weeks', num_rows=4, num_cols=4)
     c2, d2, t2 = get_cohort('A', 'B', time_group='months', num_rows=6, num_cols=5)
@@ -134,12 +243,14 @@ def test_get_cohort(mock_week_events, mock_month_events, mock_year_events,
         assert _week(d) == _week(now - timedelta(weeks=3-idx))
     # 2 - months
     for idx, d in enumerate(d2):
+        this_month = now.replace(day=1)  # work with first day of month
         months_ago = (5 - idx) * 365 / 12  # no 'months' arg for timedelta
-        assert _month(d) == _month(now - timedelta(months_ago))
+        assert _month(d) == _month(this_month - timedelta(months_ago))
     # 3 - years
     for idx, d in enumerate(d3):
+        this_year = now.replace(month=1, day=1)  # work with first day of year
         years_ago = (1 - idx) * 365  # no 'years' arg for timedelta
-        assert _year(d) == _year(now - timedelta(years_ago))
+        assert _year(d) == _year(this_year - timedelta(years_ago))
 
 
 def test_chain_events():

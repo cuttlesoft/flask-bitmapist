@@ -15,7 +15,7 @@ from urlparse import urlparse
 from dateutil.relativedelta import relativedelta
 
 from bitmapist import (DayEvents, WeekEvents, MonthEvents, YearEvents,
-                       BitOpAnd, BitOpOr, delete_runtime_bitop_keys)
+                       BitOpAnd, BitOpOr, BitOpXor, delete_runtime_bitop_keys)
 
 
 def _get_redis_connection(redis_url=None):
@@ -52,7 +52,8 @@ def _events_fn(time_group='days'):
 
 def get_cohort(primary_event_name, secondary_event_name,
                additional_events=[], time_group='days',
-               num_rows=10, num_cols=10, system='default'):
+               num_rows=10, num_cols=10, system='default',
+               with_replacement=False):
     """
     Get the cohort data for multiple chained events at multiple points in time.
 
@@ -68,6 +69,10 @@ def get_cohort(primary_event_name, secondary_event_name,
     :param int num_cols: How many results cols to get; corresponds to how far
                          forward to get results from each time point
     :param str system: Which bitmapist should be used
+    :param bool with_replacement: Whether more than one occurence of an event
+                                  should be counted for a given user; e.g., if
+                                  a user logged in multiple times, whether to
+                                  include subsequent logins for the cohort
     :returns: Tuple of (list of lists of cohort results, list of dates for
               cohort, primary event total for each date)
     """
@@ -83,8 +88,9 @@ def get_cohort(primary_event_name, secondary_event_name,
     def increment_delta(t):
         return relativedelta(**{time_group: t})
 
+    now = datetime.utcnow()
     # - 1 for deltas between time points (?)
-    event_time = datetime.utcnow() - relativedelta(**{time_group: num_rows - 1})
+    event_time = now - relativedelta(**{time_group: num_rows - 1})
 
     if time_group == 'months':
         event_time -= relativedelta(days=event_time.day - 1)  # (?)
@@ -103,23 +109,31 @@ def get_cohort(primary_event_name, secondary_event_name,
 
         if not primary_total:
             row = [None] * num_cols
-            continue
+        else:
+            for j in range(num_cols):
+                # get results for each event chain for current incremented time
+                incremented = event_time + increment_delta(j)
 
-        for j in range(num_cols):
-            # get results for each event chain for current incremented time
-            incremented = event_time + increment_delta(j)
+                if incremented > now:
+                    # date in future; no events and no need to go through chain
+                    combined_total = None
 
-            chained_events = chain_events(secondary_event_name,
-                                          additional_events,
-                                          incremented, time_group, system)
+                else:
+                    chained_events = chain_events(secondary_event_name,
+                                                  additional_events,
+                                                  incremented, time_group, system)
 
-            if chained_events:
-                combined_events = BitOpAnd(chained_events, primary_event)
-                combined_total = len(combined_events)
-            else:
-                combined_total = None
+                    if chained_events:
+                        combined_events = BitOpAnd(chained_events, primary_event)
+                        combined_total = len(combined_events)
 
-            row.append(combined_total)
+                        if not with_replacement:
+                            primary_event = BitOpXor(primary_event, combined_events)
+
+                    else:
+                        combined_total = 0
+
+                row.append(combined_total)
 
         cohort.append(row)
         event_time += increment_delta(1)

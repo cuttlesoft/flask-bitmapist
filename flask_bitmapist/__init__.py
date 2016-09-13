@@ -22,7 +22,7 @@ from bitmapist import (mark_event, unmark_event,
                        BitOpAnd, BitOpOr, get_event_names)
 
 
-__version__ = '0.1.0'
+__version__ = '0.1.2'
 __versionfull__ = __version__
 
 __all__ = ['FlaskBitmapist', 'mark', 'mark_event', 'unmark_event',
