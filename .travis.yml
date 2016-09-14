@@ -10,7 +10,7 @@ install:
 - pip install -r requirements-test.txt -e .
 - pip install coverage coveralls Mako
 before_script:
-  - redis-server --port 6399 &
+- redis-server --port 6399 &
 script: py.test --cov flask_bitmapist --cov-report term-missing --pep8 --flakes
 after_success:
 - coveralls
