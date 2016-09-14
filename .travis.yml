@@ -10,7 +10,7 @@ install:
 - pip install -r requirements-test.txt -e .
 - pip install coverage coveralls Mako
 before_script:
-  - redis-server --port 6399 &
+- redis-server --port 6399 &
 script: py.test --cov flask_bitmapist --cov-report term-missing --pep8 --flakes
 after_success:
 - coveralls
@@ -22,7 +22,7 @@ deploy:
   provider: pypi
   user: cuttlesoft
   password:
-    secure: QJaZtOuhW3iRcZrwBUXJeT+TNedpbQ+p0/5Hjle+EWEqy8zXj2Qc6Ux34+qcL59WQxqp7QZZSb3xQxzV6CGdghkxTT3QZvSqc0erRawCyyHARTPa8hWcVZTgev+uTwzzbhwV3olslVzTtGmcm8T0AhT6fk77Ae/5rfMso1cZTZJXN5+08OePL5Dq1d2qTpTqaLeRNVKf2Mdybn2TJw4CuhlbaDxf3AIGbHMJNFFN1Vuo68niIWohNVEBuYytTTHRfaNCLNeGRbkGV9mEWyl2IS/j8MXj0fg5zsqllMysaXoFboNVwpHH1ESu0suyXIPzHcg95Fs3ES5djkg/4DqKxL2sSY6OC7TgpB468IFd21XWK6lfldh+6PPsJ1gPLIWcnXlzoSr4XitvpRp2tPX6mfjws4Lg4Hidphf3wBzu/xM780BZDRZipi6ozE3GXy/XX55/ecTp3Ic+fKhLfDqgcLEvoQYJ8RKHMxw09guoGRbYDKtB5AUCVlr1kO5UFvlmk/YQP3BsIqxLrMVKHDE7rFd2/sRAb8RcB4XMZdhhowRoAV5cYPb+2maNVAHgPfMT2iyl4Ze2XbeDClCswAWX+IXwfu27xy4Jwo00drYZfq+9PftoDNRXA0V054KMcXkthNMcdcuYKGlSKRrQMiM20z9zBsmpQtus3QIZbWSZEtM=
+    secure: jX4mBERKgONSMyv8/PLuql6Zx59ENngLRPklnrQLbibjyiMaGwdCx0f0C1JsqZu8TsWaEufkYk6I+PZig8Fp3CREYoos1Ayhbi7+Gy96BUn3W5dFeOGoLPOfDKz+9R69JMlDRV3uiM2gRNDS2EmAamI8Dg6nUImiIHpnokMUNpWh8zaGE8f0//viKt8wJkqntmzi6p3ydPwnAu+rMLHaV4vUD1RDu/rBsMCaS0D7HFvEOSr+JyR9IMHD4fmxdypEKamQ7SFwTQH/DituSwNgy/eqxChTc0eNJyYvIsQzqGO9eBozLPfzzmSzvYa2sLIvi/JF6qavgNUS0LrcTcSEgVMgJuBt9Ey+rxNNAq9P3vVwVK1oexx9Hu4LTneSa7WuX17wwKsglQFMzvWXFMj2DzSNhXcDrjgJ//UNnwh5SRdgvUG66yfVkvUm1d1Bqaz2B+BkMMvRS2OLQS23gZEplozA0Vgem5Cij9EUUPYAoliSLLwvhSE6w3/PPevOviCj042+RF1TiTbgEKTxR7fsn7jxKuvpPItI3J/L0cF4LOBwI/7DawA29XB/pBO5bSM48maWzWY3nMkZd2cyOmOa+s+AaAmvuE7XRPeiR/nnYoaF3eYYm7T1EISEDfTkXpFhqDp/6L+m7OzaYgbGyZcXMgHhsc8T69KzR0TeIUb9arc=
   on:
     tags: true
-    all_branches: true
+    repo: cuttlesoft/flask-bitmapist
