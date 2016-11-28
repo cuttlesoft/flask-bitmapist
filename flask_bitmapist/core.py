@@ -21,6 +21,7 @@ class FlaskBitmapist(object):
 
     app = None
     redis_url = None
+    redis_auth = None
     SYSTEMS = _bitmapist.SYSTEMS
     TRACK_HOURLY = _bitmapist.TRACK_HOURLY
 
@@ -37,13 +38,16 @@ class FlaskBitmapist(object):
         "This is used to initialize bitmapist with your app object"
         self.app = app
         self.redis_url = app.config.get('BITMAPIST_REDIS_URL', 'redis://localhost:6379')
+        self.redis_auth = app.config.get('BITMAPIST_REDIS_PASSWORD')
 
         if self.redis_url not in _bitmapist.SYSTEMS.values():
             host, port = _get_redis_connection(self.redis_url)
             _bitmapist.setup_redis(
                 app.config.get('BITMAPIST_REDIS_SYSTEM', 'default'),
                 host,
-                port)
+                port,
+                password = self.redis_auth)
+
 
         _bitmapist.TRACK_HOURLY = app.config.get('BITMAPIST_TRACK_HOURLY', False)
 
