@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 import mock
 from random import randint
 
@@ -243,14 +244,10 @@ def test_get_cohort_structure(mock_week_events, mock_month_events,
         assert _week(d) == _week(now - timedelta(weeks=3-idx))
     # 2 - months
     for idx, d in enumerate(d2):
-        this_month = now.replace(day=1)  # work with first day of month
-        months_ago = (5 - idx) * 365 / 12  # no 'months' arg for timedelta
-        assert _month(d) == _month(this_month - timedelta(months_ago))
+        assert _month(d) == _month(now - relativedelta(months=(5 - idx)))
     # 3 - years
     for idx, d in enumerate(d3):
-        this_year = now.replace(month=1, day=1)  # work with first day of year
-        years_ago = (1 - idx) * 365  # no 'years' arg for timedelta
-        assert _year(d) == _year(this_year - timedelta(years_ago))
+        assert _year(d) == _year(now - relativedelta(years=(1-idx)))
 
 
 def test_chain_events():
