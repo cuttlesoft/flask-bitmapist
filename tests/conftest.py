@@ -16,7 +16,6 @@ def app(request):
     app = Flask(__name__)
     app.debug = True
     app.config['TESTING'] = True
-    # app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6379'
     app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6399'
     app.config['SECRET_KEY'] = 'secret'
     app.config['SECRET_KEY'] = 'verysecret'
@@ -131,3 +130,14 @@ def sqlalchemy(app, request, sqlalchemy_db, sqlalchemy_user):
     request.addfinalizer(teardown)
     # TODO: may return just db with tests using sqlalchemy_user fixture directly
     return db, sqlalchemy_user
+
+
+@pytest.fixture
+def auth_bitmap():
+    app = Flask(__name__)
+    app.config['BITMAPIST_REDIS_URL'] = 'redis://localhost:6400'
+    app.config['BITMAPIST_REDIS_PASSWORD'] = 'foobared'
+    app.config['SECRET_KEY'] = 'secret'
+    app.config['SECRET_KEY'] = 'verysecret'
+    auth_bitmap = FlaskBitmapist(app)
+    return auth_bitmap

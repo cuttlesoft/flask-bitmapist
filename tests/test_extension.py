@@ -629,3 +629,16 @@ def test_unmark_function(app, client):
 
     unmark_event('active', 126)
     assert 126 not in MonthEvents('active', now.year, now.month)
+
+
+def test_authenticated_redis(app, auth_bitmap):
+    assert auth_bitmap.redis_auth == 'foobared'
+
+    # Test to make sure auth_bitmap setup with different set of params
+    assert auth_bitmap.redis_url != app.config['BITMAPIST_REDIS_URL']
+
+    mark_event('active', 42)
+    assert 42 in MonthEvents('active', now.year, now.month)
+
+    unmark_event('active', 42)
+    assert 42 not in MonthEvents('active', now.year, now.month)
