@@ -13,7 +13,7 @@ Flask-SQLAlchemy==2.1
 future==0.15.2
 imagesize==0.7.1
 itsdangerous==0.24
-Jinja2==2.8
+Jinja2==2.11.3
 MarkupSafe==0.23
 mock==2.0.0
 pep8==1.7.0
